@@ -7,6 +7,7 @@ package
 	import isohill.plugins.XRayLayers;
 	import isohill.Point3;
 	import isohill.tmx.TMX;
+	import isohill.tmx.TMXLayer;
 	import isohill.tmx.TMXPlugin;
 	import isohill.utils.Point3Input;
 	import starling.display.Sprite;
@@ -45,19 +46,20 @@ package
 			addChild(isoHill); // add the engine to starling
 			addPlugins(isoHill);
 			isoHill.start(); // start all the runtime logic
-			
+			trace("setup"); 
 			addChild(new Stats()); // Mrdoob's performance monitor
 		}
 		private function addPlugins(isoHill:IsoHill):void {
 			var tmxPlugin:TMXPlugin = new TMXPlugin(tmx); // plugin to bind the TMX data to the engine
 			// link the TMX layers to engine layers (allows for optional "in-between" layers)
-			var i:int = 0;
-			for (var layerName:String in tmx.layersHash) {
-				var grid:GridIsoSprites = tmxPlugin.makeEmptyGridOfSize(i);
+			for (var i:int = 0; i < tmx.layersArray.length; i++) {
+				var layer:TMXLayer = tmx.layersArray[i];
+				var layerName:String = layer.name;
+				var grid:GridIsoSprites = tmxPlugin.makeEmptyGridOfSize(i, layerName);
 				if (layerName=="Tile Layer 1") grid.sort = false; // disable sorting of the ground as it doesn't need it
 				isoHill.addLayer(i, layerName, grid); // add the layer to the engine
-				i++;
 			}
+			tmxPlugin.init();
 			isoHill.addPlugin(new XRayLayers());
 			isoHill.addPlugin(tmxPlugin); // adding the plugin
 			isoHill.addPlugin(new IsoCamera(new Point3Input(stage, 0, 600)));
