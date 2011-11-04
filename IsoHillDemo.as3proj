@@ -34,7 +34,7 @@
     <option showDeprecationWarnings="True" />
     <option showUnusedTypeSelectorWarnings="True" />
     <option strict="True" />
-    <option useNetwork="False" />
+    <option useNetwork="True" />
     <option useResourceBundleMetadata="True" />
     <option warnings="True" />
     <option verboseStackTraces="False" />

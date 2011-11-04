@@ -60,7 +60,7 @@ package
 				isoHill.addLayer(i, layerName, grid); // add the layer to the engine
 			}
 			tmxPlugin.init();
-			isoHill.addPlugin(new XRayLayers());
+			//isoHill.addPlugin(new XRayLayers());
 			isoHill.addPlugin(tmxPlugin); // adding the plugin
 			isoHill.addPlugin(new IsoCamera(new Point3Input(stage, 0, 600)));
 		}

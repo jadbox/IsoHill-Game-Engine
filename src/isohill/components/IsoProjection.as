@@ -30,33 +30,14 @@ package isohill.components
 			var isoPt:Point = sprite.pt;
 			var image:Image = sprite.image;
 			pt = projection.transformPoint(isoPt);
-			image.x = pt.x;///isoToScreenX(isoPt.x, isoPt.y);
-			image.y = pt.y;//isoToScreenY(isoPt.x, isoPt.y);	
+			image.x = pt.x;
+			image.y = pt.y;
 		}
-		/*
-		public function isoToScreenX(x:Number, y:Number, z:Number = 0):Number {
-			return x - y;
-		}
-		public function isoToScreenY(x:Number, y:Number, z:Number = 0):Number {
-			return (x + y) * .5 - z;
-		}
-		public function screenToIsoX(x:Number, y:Number, z:Number = 0):Number {
-			return x * .5 + y;// + screenPt.z;
-		}
-		public function screenToIsoY(x:Number, y:Number, z:Number = 0):Number {
-			return y - x * .5;
-		}
-		*/
 		public function isoToScreen(isoPt:Point):Point {
 			return projection.transformPoint(isoPt);
 		}
 		public function screenToIso(pt:Point):Point {
-		/*
-			var p:Point = new Point();
-			p.x = screenToIsoX(pt.x, pt.y);
-			p.y = screenToIsoY(pt.x, pt.y); */
 			return projectionInverse.transformPoint(pt);
-			//return p;
 		}
 		public function requiresImage():Boolean { 
 			return true;
