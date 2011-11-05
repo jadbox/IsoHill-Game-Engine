@@ -56,6 +56,7 @@ package isohill.utils
 		}
 		private function onTouch(e:TouchEvent):void {
 			var touch:Touch = e.getTouch(stage);
+			if (touch == null) return;
 			var _x:Number = touch.globalX;
 			var _y:Number = touch.globalY;
 			
