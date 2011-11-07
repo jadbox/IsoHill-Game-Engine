@@ -11,8 +11,10 @@ package isohill
 {
 	import flash.display.BitmapData;
 	import flash.geom.Point;
+	import isohill.components.EventHandlerProxy;
 	import isohill.components.IComponent;
 	import isohill.components.IsoProjection;
+	import starling.events.Event;
 	import starling.textures.Texture;
 	import starling.display.Image;
 	import flash.utils.getTimer;
@@ -42,6 +44,14 @@ package isohill
 			//if(texture!==null) setTexture(texture); // keep the image null until the texture is set
 			components = new <IComponent>[IsoProjection.instance];
 		}
+		public function addEventListener(event:String, callBackFunction:Function):void {
+			if (!ready) components.push(new EventHandlerProxy(this, event, callBackFunction));
+			else image.addEventListener(event, callBackFunction);
+		}
+		public function removeEventListener(event:String, callBackFunction:Function):void {
+			if (!ready) return; // TODO: remove the ASyncEventHandler from the components
+			image.removeEventListener(event, callBackFunction);
+		}
 		public function remove():void {
 			if (layer != null) layer.remove(this);
 		}
@@ -56,6 +66,7 @@ package isohill
 		public function setTexture(texture:Texture):void {
 			if (image != null) return;
 			image = new Image(texture);
+			image.touchable = false;
 			image.pivotY = image.texture.height;
 			image.pivotX = 0;//image.texture.width / 2;
 		}

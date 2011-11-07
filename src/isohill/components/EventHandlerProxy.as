@@ -13,24 +13,28 @@ package isohill.components
 	import isohill.IsoSprite;
 	import starling.textures.Texture;
 	/**
-	 * ...
+	 * This component acts as a proxy to register events to an image that hasn't loaded yet
 	 * @author Jonathan Dunlap
 	 */
-	public class AsyncTexture implements IComponent 
+	public class EventHandlerProxy implements IComponent 
 	{
-		private var assetManagerKey:String;
-		public function AsyncTexture(assetManagerKey:String) 
+		private var sprite:IsoSprite;
+		private var eventName:String;
+		private var callBackFunction:Function;
+		public function EventHandlerProxy(sprite:IsoSprite, eventName:String, callBackFunction:Function) 
 		{
-			this.assetManagerKey = assetManagerKey;
+			this.sprite = sprite;
+			this.eventName = eventName;
+			this.callBackFunction = callBackFunction;
 		}
 		public function advanceTime(time:Number, sprite:IsoSprite):void {
-			var texture:Texture = AssetManager.instance.getTexture(assetManagerKey, sprite.frame);
-			if (texture == null) return;
 			sprite.components.splice(sprite.components.indexOf(this), 1);
-			sprite.setTexture(texture);
+			sprite.image.touchable = true;
+			sprite.image.addEventListener(eventName, callBackFunction);
+			callBackFunction = null; // remove the reference
 		}
 		public function requiresImage():Boolean { 
-			return false;
+			return true;
 		}
 	}
 

@@ -11,7 +11,9 @@ package isohill.loaders
 {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display.DisplayObject;
 	import flash.display.Loader;
+	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
 	import flash.net.URLLoader;
@@ -25,41 +27,69 @@ package isohill.loaders
 	{
 		public static var instance:ImgLoader = new ImgLoader(); // singleton access
 		
-		private var data:Dictionary = new Dictionary(false); // cache
+		private var loaderHash:Dictionary = new Dictionary(false); // cache
+		private var loaderURLHash:Dictionary = new Dictionary(false); // cache
 		public function ImgLoader() 
 		{
 			
 		}
 		// BitmapData loader with simple caching based on url
-		public function getBitmapData(url:String, onLoad:Function):void {
-			if (data[url] != null) {
-				onLoad(data[url]);
+		public function getBitmapData(url:String, onLoad:Function):void {			
+			var onComplete:Function = function(loader:Loader):void {
+				var bitmap:Bitmap = loader.content as Bitmap;
+				if (bitmap == null) throw new Error("not a bitmap");
+				onLoad(bitmap.bitmapData);
 			}
-			var onComplete:Function = function(e:Event):void {
-				var bd:BitmapData = e.currentTarget.content.bitmapData;
-				if (bd == null) throw new Error("not a bitmap");
-				data[url] = bd;
-				onLoad(bd);
+			var loader:Loader = getLoader(url, onComplete);
+		}
+		public function getLoader(url:String, addOnComplete:Function=null):Loader {
+			if (loaderHash[url] != null) {
+				if (addOnComplete !== null) addOnComplete( loaderHash[url] );
+				return loaderHash[url];
 			}
 			var loader:Loader = new Loader();
-			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onComplete);
-			//loader.addEventListener(IOErrorEvent.ERROR, function(e:IOErrorEvent):void { 
-			//	trace(e); 
-			//} );
-			loader.load( new URLRequest(url) );
+			if (addOnComplete !== null) loader.contentLoaderInfo.addEventListener(Event.COMPLETE, function(e:Event):void { addOnComplete(loader); } );
+			loader.load(new URLRequest(url));
+			loaderHash[url] = loader;
+			return loader;
 		}
-		public function getXML(url:String, onLoad:Function):void {
-			if (data[url] != null) {
-				onLoad(data[url]);
-			}
-			var onComplete:Function = function(e:Event):void {
-				var bd:XML = XML(e.currentTarget.data);
-				data[url] = bd;
-				onLoad(bd);
+		public function getURLLoader(url:String, addOnComplete:Function=null):URLLoader {
+			if (loaderURLHash[url] != null) {
+				if (addOnComplete !== null) addOnComplete( loaderURLHash[url] );
+				return loaderHash[url];
 			}
 			var loader:URLLoader = new URLLoader();
-			loader.addEventListener(Event.COMPLETE, onComplete);
-			loader.load( new URLRequest(url) );
+			if (addOnComplete !== null) loader.addEventListener(Event.COMPLETE, function(e:Event):void { addOnComplete(loader); });
+			loader.load(new URLRequest(url));
+			loaderURLHash[url] = loader;
+			return loader;
+		}
+		public function getDisplayObject(url:String, linkage:String, onLoad:Function):void {
+			var onComplete:Function = function(loader:Loader):void {
+				onLoad(getDisplayObjectFromLoader(loader, linkage));
+			}
+			var loader:Loader = getLoader(url, onComplete);	
+		}
+		public function getDisplayObjectProxy(url:String, linkage:String):Sprite {
+			var sp:Sprite = new Sprite();
+			getDisplayObject(url, linkage, function(displayObject:DisplayObject):void {
+				sp.addChild(displayObject);
+			});
+			return sp;
+		}
+		private function getDisplayObjectFromLoader(loader:Loader, linkage:String=""):DisplayObject {
+			if (linkage == null) linkage = "";
+			var Def:Class = loader.contentLoaderInfo.applicationDomain.getDefinition(linkage) as Class;
+			var display:DisplayObject = new Def();
+			if (display == null) throw new Error("not a bitmap");
+			return display;
+		}
+		public function getXML(url:String, onLoad:Function):void {
+			var onComplete:Function = function(loader:URLLoader):void {
+				var data:* = loader.data;
+				onLoad( new XML(data) );
+			}
+			getURLLoader(url, onComplete);
 		}
 	}
 }
