@@ -12,7 +12,9 @@ package isohill
 	import flash.geom.Point;
 	import flash.utils.Dictionary;
 	import isohill.plugins.IPlugin;
+	import isohill.tmx.TMXLayer;
 	import starling.animation.IAnimatable;
+	import starling.animation.Juggler;
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	/**
@@ -36,12 +38,14 @@ package isohill
 		public var layers:Vector.<GridIsoSprites>; // it's a plugin too, but it's special and gets its own property
 		public var layersHash:Dictionary; // indexed my layer name (key:*, value:GridIsoSprites)
 		private var plugins:Vector.<IPlugin>;
+		public var juggler:Juggler;
 			
 		public function IsoHill() 
 		{
 			layers = new <GridIsoSprites>[];
 			plugins = new <IPlugin>[];
 			layersHash = new Dictionary();
+			juggler = new Juggler();
 			instance = this;
 		}
 		public function addLayer(index:int, name:String, layer:GridIsoSprites):void {
@@ -58,6 +62,14 @@ package isohill
 		public function getLayerByName(name:String):GridIsoSprites {
 			return layersHash[name];
 		}
+		public function getSpriteByLayerName(layerName:String, spriteName:String):IsoSprite {
+			var layer:GridIsoSprites = getLayerByName(layerName);
+			return IsoSprite(layer.spriteHash[spriteName]);
+		}
+		public function getSpriteByLayerIndex(layerIndex:int, spriteName:String):IsoSprite {
+			var layer:GridIsoSprites = layers[layerIndex];
+			return IsoSprite(layer.spriteHash[spriteName]);
+		}
 		public function addPlugin(plugin:IPlugin):void {
 			plugins.push(plugin);
 		}
@@ -73,6 +85,7 @@ package isohill
 			Starling.juggler.remove(this);
 		}
 		public function advanceTime(time:Number):void {
+			juggler.advanceTime(time);
 			// update plugins
 			for each(var plugin:IPlugin in plugins) plugin.advanceTime(time, this);
 			// update sprites

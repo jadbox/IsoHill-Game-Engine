@@ -42,6 +42,17 @@ package isohill
 			data = new Vector.<Vector.<IsoSprite>>(w * h + 1, true);
 			flatData = new <IsoSprite>[];
 		}
+		public function flatten():void {
+			sort = false;
+			container.flatten();
+		}
+		public function unflatten():void {
+			sort = true;
+			container.unflatten();
+		}
+		public function isFlattened():Boolean {
+			return container.isFlattened;
+		}
 		// get the collection of IsoSprites in cell location
 		public function getCell(x:int, y:int):Vector.<IsoSprite> {
 			if (x > w) x = w-1; // inlined bound checking for speed
@@ -98,7 +109,7 @@ package isohill
 			updateLocation(val);
 			spriteHash[val.name] = val;
 			val.layer = this;
-			if(val.ready) container.addChild(val.image);
+			if(val.ready) addStarlingChild(val.image);
 			return val;
 		}
 		public function remove(val:IsoSprite):IsoSprite {
@@ -114,6 +125,15 @@ package isohill
 			for each (var sprite:IsoSprite in val) push(sprite);
 			return val;
 		}
+		private function addStarlingChild(image:Image):void {
+			var wasFlat:Boolean = container.isFlattened;
+			if(wasFlat) container.unflatten();
+			container.addChild(image);
+			if (container.isFlattened) {
+				sortSystem();
+				container.flatten();
+			}
+		}
 		public function advanceTime(time:Number, engine:IsoHill):void {
 			var first:IsoSprite;
 			for each(var layer:Vector.<IsoSprite> in data) {
@@ -121,7 +141,7 @@ package isohill
 					if (sprite == null) continue;
 					updateLocation(sprite);
 					if (sprite.ready) {
-						if (sprite.image.parent == null) container.addChild(sprite.image); // sprite is loaded and ready to be added to the container
+						if (sprite.image.parent == null) addStarlingChild(sprite.image); // sprite is loaded and ready to be added to the container
 						//if (sort && first != null && sorter(first, sprite)) { container.swapChildren(first.image, sprite.image); trace("sorting");  } // sprite==null
 						//else first = sprite; // else
 					}	
@@ -129,7 +149,9 @@ package isohill
 				}
 			}
 			
-			if (!sort) return;
+			if (sort) sortSystem();
+		}
+		private function sortSystem():void {
 			var f:DisplayObject;
 			for (var i:int = 0; i < container.numChildren; i++) {
 				var c:DisplayObject = container.getChildAt(i);

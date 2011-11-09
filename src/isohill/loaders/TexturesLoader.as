@@ -40,10 +40,12 @@ package isohill.loaders
 			var bigTexture:Texture = Texture.fromBitmapData(bd);
 			//var textures:Vector.<Texture> = new Vector.<Texture>(frames.length, true);
 			var i:int = 0;
+			var textures:Vector.<Texture> = new <Texture>[];
 			for each (var frame:Rectangle in frames) {
-				//frames.push( Texture.fromTexture(bigTexture, frame) );
-				if(onLoadCallback!==null) onLoadCallback.onTextureLoaded(url, i++, Texture.fromTexture(bigTexture, frame));
+				textures.push( Texture.fromTexture(bigTexture, frame) );
+			///	if(onLoadCallback!==null) onLoadCallback.onTextureLoaded(url, i++, Texture.fromTexture(bigTexture, frame));
 			}
+			onLoadCallback.onTexturesLoaded(url, textures);
 			onLoadCallback = null;
 		}
 		public function get id():String { return url; }

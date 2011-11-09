@@ -11,23 +11,29 @@ package isohill.components
 {
 	import isohill.AssetManager;
 	import isohill.IsoSprite;
+	import starling.display.Image;
 	import starling.textures.Texture;
 	/**
-	 * ...
+	 * This class will set a Starling image onto an IsoSprite once it is loaded and ready in the AssetManager
 	 * @author Jonathan Dunlap
 	 */
 	public class AsyncTexture implements IComponent 
 	{
 		private var assetManagerKey:String;
-		public function AsyncTexture(assetManagerKey:String) 
+		private static var I:int = 0; // current global async index
+		private var i:int = 0; // global index for debugging
+		private var frame:int;
+		public function AsyncTexture(assetManagerKey:String, frame:int=0) 
 		{
+			i = ++I;
 			this.assetManagerKey = assetManagerKey;
+			this.frame = frame;
 		}
 		public function advanceTime(time:Number, sprite:IsoSprite):void {
-			var texture:Texture = AssetManager.instance.getTexture(assetManagerKey, sprite.frame);
-			if (texture == null) return;
+			var image:Image = AssetManager.instance.getImage(assetManagerKey, frame);
+			if (image == null) return; 
 			sprite.components.splice(sprite.components.indexOf(this), 1);
-			sprite.setTexture(texture);
+			sprite.setImage(image);
 		}
 		public function requiresImage():Boolean { 
 			return false;

@@ -11,9 +11,13 @@ package isohill
 {
 	import flash.display.BitmapData;
 	import flash.geom.Point;
+	import isohill.components.AsyncTexture;
 	import isohill.components.EventHandlerProxy;
 	import isohill.components.IComponent;
 	import isohill.components.IsoProjection;
+	import isohill.loaders.ITextureLoader;
+	import isohill.loaders.TextureLoader;
+	import starling.display.MovieClip;
 	import starling.events.Event;
 	import starling.textures.Texture;
 	import starling.display.Image;
@@ -25,24 +29,32 @@ package isohill
 	 */
 	public class IsoSprite 
 	{
-		public var frame:int; // current frame of the image
 		public var name:String; // Identifier
 		public var type:String; // type label
 		public var image:Image; // the actual Starling asset
 		public var pt:Point3; // x, y, z location
 		public var state:State; // state of the asset (directives used for AI, player controlling, etc)
 		public var components:Vector.<IComponent>; // collection of sprite manipulators (including projection)
-		internal var layer:GridIsoSprites;
-		internal var layerIndex:int=-1;
+		internal var layer:GridIsoSprites; // backward reference to the container (internal use only)
+		internal var layerIndex:int=-1; // cell index container (internal use only)
 		
 		// Must be given a texture or set with setTexture before use
 		public function IsoSprite(name:String, pt:Point3=null, state:State=null) 
 		{
 			this.name = name;
 			this.state = state!=null?state:new State();
-			this.pt = pt!=null?pt:new Point3();
-			//if(texture!==null) setTexture(texture); // keep the image null until the texture is set
+			this.pt = pt != null?pt:new Point3();
+
 			components = new <IComponent>[IsoProjection.instance];
+		}
+		public function setTextureID(id:String, frame:int = 0):void {
+			if (ready) return;
+			//TODO: for each(var item:IComponent in components.filter(function(t:IComponent):Boolean { return t is AsyncTexture; } )) components.splice(components.indexOf(item), 1);
+			components.push(new AsyncTexture(id, frame));
+		}
+		public function setTextureLoader(loader:ITextureLoader):void {
+			setTextureID(loader.id);
+			AssetManager.instance.addLoader(loader);
 		}
 		public function addEventListener(event:String, callBackFunction:Function):void {
 			if (!ready) components.push(new EventHandlerProxy(this, event, callBackFunction));
@@ -63,9 +75,11 @@ package isohill
 			if (index != -1) components.splice(index, 1);
 		}
 		// Set the texture- this can only be done once
-		public function setTexture(texture:Texture):void {
+		public function setImage(img:Image):void {
+			if (img == null) throw new Error("img is null");
 			if (image != null) return;
-			image = new Image(texture);
+
+			this.image = img;
 			image.touchable = false;
 			image.pivotY = image.texture.height;
 			image.pivotX = 0;//image.texture.width / 2;

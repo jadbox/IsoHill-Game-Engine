@@ -16,6 +16,7 @@ package isohill.tmx
 	import isohill.IsoSprite;
 	import isohill.plugins.IPlugin;
 	import isohill.Point3;
+	import starling.display.MovieClip;
 	import starling.textures.Texture;
 	/**
 	 * The TMX plugin for the engine to bind the data to the renderer.
@@ -41,9 +42,7 @@ package isohill.tmx
 		}
 		private var steps:int=0; // TODO: add async asset tmx sprite creation for when its texture is loaded
 		public function advanceTime(time:Number, engine:IsoHill):void {
-			//if (steps == -1 || ++steps < 80) return;
-			//if (steps == -1) return;
-			//steps = -1;
+
 		}
 		
 		private function makeSprites(cellX:int, cellY:int):void {
@@ -56,8 +55,9 @@ package isohill.tmx
 				var pt3:Point3 = grid.toLayerPt(cellX, cellY);
 				var name:String = tmx.getImgSrc(_cell)+"_"+(iSprite++);
 				var sprite:IsoSprite = new IsoSprite(name, pt3);
-				sprite.frame = tmx.getImgFrame(_cell); 
-				sprite.components.push( new AsyncTexture( tmx.getImgSrc(_cell) ) );
+				 
+				sprite.setTextureID(tmx.getImgSrc(_cell), tmx.getImgFrame(_cell));
+
 				grid.push(sprite);
 			}
 			// in object layers
@@ -71,8 +71,8 @@ package isohill.tmx
 				var sprite:IsoSprite = new IsoSprite(null, new Point3(obj.x, obj.y));
 				sprite.name = obj.name; 
 				sprite.type = obj.type;
-				sprite.frame = tmx.getImgFrame( obj.gid );
-				sprite.components.push( new AsyncTexture( tmx.getImgSrc(obj.gid) ) );
+				sprite.setTextureID(tmx.getImgSrc(obj.gid), tmx.getImgFrame( obj.gid ));
+
 				grid.push(sprite);
 			}
 		}

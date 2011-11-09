@@ -12,6 +12,8 @@ package isohill
 	import flash.utils.Dictionary;
 	import isohill.loaders.IOnTextureLoaded;
 	import isohill.loaders.ITextureLoader;
+	import starling.display.Image;
+	import starling.display.MovieClip;
 	import starling.textures.Texture;
 	/**
 	 * Indexer for Textures
@@ -23,6 +25,7 @@ package isohill
 		
 		private var textures:Dictionary = new Dictionary();
 		private var assetLoaders:Dictionary = new Dictionary();
+		//private var textureVectors:Dictionary = new Dictionary(); // value is <Textures>[]
 		public function AssetManager() 
 		{
 			
@@ -32,12 +35,40 @@ package isohill
 			assetLoaders[loader.id] = loader;
 			loader.load(this);
 		}
-		public function onTextureLoaded(url:String, frame:int, texture:Texture):void {
-			textures[url + "@" + frame] = texture;
+		public function onTextureLoaded(id:String, texture:Texture):void {
+			if (texture == null) throw new Error("null texture set for id " + id);
+			textures[id] = texture;
 		}
-		public function getTexture(url:String, frame:int):Texture {
-			return textures[url + "@" + frame];
+		public function onTexturesLoaded(id:String, texture:Vector.<Texture>):void {
+			if (texture == null) throw new Error("null texture set for id " + id);
+			textures[id] = texture;
 		}
+		//, forceFrame:int=-1
+		public function getImage(url:String, startingFrame:int = 0):Image {
+			if (textures[url] == null) {
+				return null; // texture unavailable for Image creation
+			}
+			var image:Image;
+			if (textures[url] is Vector.<Texture>) {
+				//if (forceFrame > -1) {
+				//	image = new Image(textures[url][forceFrame]);
+				//}
+				//else 
+				image = new MovieClip(textures[url]);
+				MovieClip(image).currentFrame = startingFrame;
+			}
+			else {
+				image = new Image(textures[url]);
+			}
+			return image;
+		}
+		//public function getTexture(url:String, frame:int):Texture {
+		//	return textures[url + "@" + frame];
+		//}
+		//public function getTextures(url:String):Vector.<Texture> {
+		//	var vector
+		//	return textures[url + "@" + i];
+		//}
 		public function getLoader(id:String):ITextureLoader {
 			return assetLoaders[id];
 		}

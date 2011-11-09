@@ -13,6 +13,7 @@ package isohill.loaders
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.display.Loader;
+	import flash.display.MovieClip;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
@@ -64,23 +65,30 @@ package isohill.loaders
 			loaderURLHash[url] = loader;
 			return loader;
 		}
-		public function getDisplayObject(url:String, linkage:String, onLoad:Function):void {
+		public function getMovieClip(url:String, linkage:String, onLoad:Function):void {
 			var onComplete:Function = function(loader:Loader):void {
-				onLoad(getDisplayObjectFromLoader(loader, linkage));
+				onLoad(getMovieClipFromLoader(loader, linkage));
 			}
 			var loader:Loader = getLoader(url, onComplete);	
 		}
-		public function getDisplayObjectProxy(url:String, linkage:String):Sprite {
-			var sp:Sprite = new Sprite();
-			getDisplayObject(url, linkage, function(displayObject:DisplayObject):void {
-				sp.addChild(displayObject);
+		public function getMovieClipProxy(url:String, linkage:String):Sprite {
+			var sp:MovieClip = new MovieClip();
+			getMovieClip(url, linkage, function(mc:MovieClip):void {
+				sp.addChild(mc);
 			});
 			return sp;
 		}
-		private function getDisplayObjectFromLoader(loader:Loader, linkage:String=""):DisplayObject {
-			if (linkage == null) linkage = "";
+		private function getMovieClipFromLoader(loader:Loader, linkage:String = ""):MovieClip {
+			if (loader.content == null) throw new Error("invalid asset loaded");
+			if (linkage == "" || linkage == null) {
+				if (loader.content.width == 0 || loader.content.height == 0) throw new Error("image size is zero");
+				var mc:MovieClip = new MovieClip();
+				mc.addChild(loader.content);
+				return mc;
+			}
 			var Def:Class = loader.contentLoaderInfo.applicationDomain.getDefinition(linkage) as Class;
-			var display:DisplayObject = new Def();
+			var display:MovieClip = new Def();
+			if (display.width == 0 || display.height == 0) throw new Error("image asset size is zero of linkage: "+linkage);
 			if (display == null) throw new Error("not a bitmap");
 			return display;
 		}

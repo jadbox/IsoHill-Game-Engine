@@ -38,7 +38,7 @@ package isohill.loaders
 		}
 		private function onLoad(bd:BitmapData):void {
 			var texture:Texture = Texture.fromBitmapData(bd);
-			if(onLoadCallback!==null) onLoadCallback.onTextureLoaded(url, 0, texture);
+			if(onLoadCallback!==null) onLoadCallback.onTextureLoaded(url, texture);
 			onLoadCallback = null;
 		}
 		public function get id():String { return url; }

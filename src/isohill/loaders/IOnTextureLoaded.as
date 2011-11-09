@@ -17,7 +17,8 @@ package isohill.loaders
 	 */
 	public interface IOnTextureLoaded 
 	{
-		function onTextureLoaded(url:String, frame:int, texture:Texture):void;
+		function onTextureLoaded(url:String, texture:Texture):void;
+		function onTexturesLoaded(url:String, texture:Vector.<Texture>):void;
 	}
 	
 }
