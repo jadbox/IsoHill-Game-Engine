@@ -6,7 +6,7 @@
  <tileset firstgid="161" name="terrain_0" tilewidth="64" tileheight="64">
   <image source="terrain_0.png" width="640" height="1024"/>
  </tileset>
- <layer name="earch" width="25" height="25">
+ <layer name="earth" width="25" height="25">
   <data encoding="base64" compression="zlib">
    eJxjYmBgYBohmJEOZjLisIcWdlNqLq3cRMv4I+RmRiLVUTvMsdlLihuIcTeyPK38KADE3EiYFnbwAjEzEhaiQVyg2yFKpln45HkI2EFu2CHrE8OCsaUHaqQvSjE+82lpN3q+oEYcEBP/uOyklvnUdj8uP5Ca7ociHg5+wIUBNK0FmQ==
   </data>

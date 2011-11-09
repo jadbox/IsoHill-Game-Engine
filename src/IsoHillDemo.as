@@ -64,7 +64,7 @@ package
 				var layer:TMXLayer = tmx.layersArray[i];
 				var layerName:String = layer.name;
 				var grid:GridIsoSprites = tmxPlugin.makeEmptyGridOfSize(i, layerName);
-				if (layerName=="Tile Layer 1") grid.flatten(); // disable sorting and flatten the ground as it is not dynamic (speed improvement)
+				if (layerName.indexOf("earth")!=-1) grid.flatten(); // disable sorting and flatten the ground as it is not dynamic (speed improvement)
 				isoHill.addLayer(i, layerName, grid); // add the layer to the engine
 			}
 			tmxPlugin.init();
