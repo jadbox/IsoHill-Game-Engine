@@ -28,7 +28,7 @@ package isohill
 			height = Math.max(height, 1); // same here
 			data = new Vector.<Boolean>(width * height, true); // make a prefined fixed sized array for performance
 		}
-		public function getCell(x:int, y:int):int {
+		public function getCell(x:int, y:int):Boolean {
 			var index:int = y * width + x; // get the index of the single array for the grid position
 			return data[index];
 		}
