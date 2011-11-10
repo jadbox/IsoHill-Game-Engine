@@ -24,19 +24,19 @@ package isohill.components
 		private static var I:int = 0; // current global async index
 		private var i:int = 0; // global index for debugging
 		private var frame:int;
-		private var obj:Object;
-		public function AsyncTexture(assetManagerKey:String, frame:int=0, obj:Object=null) 
+		private var imageDecorator:Object;
+		public function AsyncTexture(assetManagerKey:String, frame:int=0, imageDecorator:Object=null) 
 		{
 			i = ++I;
 			this.assetManagerKey = assetManagerKey;
 			this.frame = frame;
-			this.obj = obj;
+			this.imageDecorator = imageDecorator;
 		}
 		public function advanceTime(time:Number, sprite:IsoSprite):void {
 			var image:Image = AssetManager.instance.getImage(assetManagerKey, frame);
 			if (image == null) return; 
-			for (var prop:String in obj) {
-				image[prop] = obj[prop];
+			for (var prop:String in imageDecorator) {
+				image[prop] = imageDecorator[prop];
 			}
 			sprite.components.splice(sprite.components.indexOf(this), 1);
 			sprite.setImage(image);

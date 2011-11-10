@@ -140,11 +140,7 @@ package isohill
 				if (layer != null) for each(var sprite:IsoSprite in layer) {
 					if (sprite == null) continue;
 					updateLocation(sprite);
-					if (sprite.ready) {
-						if (sprite.image.parent == null) addStarlingChild(sprite.image); // sprite is loaded and ready to be added to the container
-						//if (sort && first != null && sorter(first, sprite)) { container.swapChildren(first.image, sprite.image); trace("sorting");  } // sprite==null
-						//else first = sprite; // else
-					}	
+					if (sprite.image!==null && sprite.image.parent === null) addStarlingChild(sprite.image); // sprite is loaded and ready to be added to the container
 					sprite.advanceTime(time);
 				}
 			}
@@ -153,8 +149,10 @@ package isohill
 		}
 		private function sortSystem():void {
 			var f:DisplayObject;
-			for (var i:int = 0; i < container.numChildren; i++) {
-				var c:DisplayObject = container.getChildAt(i);
+			var numSprites:int = container.numChildren;
+			var c:DisplayObject;
+			for (var i:int = 0; i < numSprites; i++) {
+				c = container.getChildAt(i);
 				if (f != null && sorterDisplay(f, c)) container.swapChildren(f, c);
 				f = c;
 			}
