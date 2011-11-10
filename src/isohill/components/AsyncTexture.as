@@ -13,6 +13,7 @@ package isohill.components
 	import isohill.IsoSprite;
 	import starling.display.Image;
 	import starling.textures.Texture;
+	import starling.textures.TextureSmoothing;
 	/**
 	 * This class will set a Starling image onto an IsoSprite once it is loaded and ready in the AssetManager
 	 * @author Jonathan Dunlap
@@ -23,15 +24,20 @@ package isohill.components
 		private static var I:int = 0; // current global async index
 		private var i:int = 0; // global index for debugging
 		private var frame:int;
-		public function AsyncTexture(assetManagerKey:String, frame:int=0) 
+		private var obj:Object;
+		public function AsyncTexture(assetManagerKey:String, frame:int=0, obj:Object=null) 
 		{
 			i = ++I;
 			this.assetManagerKey = assetManagerKey;
 			this.frame = frame;
+			this.obj = obj;
 		}
 		public function advanceTime(time:Number, sprite:IsoSprite):void {
 			var image:Image = AssetManager.instance.getImage(assetManagerKey, frame);
 			if (image == null) return; 
+			for (var prop:String in obj) {
+				image[prop] = obj[prop];
+			}
 			sprite.components.splice(sprite.components.indexOf(this), 1);
 			sprite.setImage(image);
 		}

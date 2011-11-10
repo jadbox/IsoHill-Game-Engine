@@ -47,10 +47,10 @@ package isohill
 
 			components = new <IComponent>[IsoProjection.instance];
 		}
-		public function setTextureID(id:String, frame:int = 0):void {
+		public function setTextureID(id:String, frame:int = 0, decorator:Object=null):void {
 			if (ready) return;
 			//TODO: for each(var item:IComponent in components.filter(function(t:IComponent):Boolean { return t is AsyncTexture; } )) components.splice(components.indexOf(item), 1);
-			components.push(new AsyncTexture(id, frame));
+			components.push(new AsyncTexture(id, frame, decorator));
 		}
 		public function setTextureLoader(loader:ITextureLoader):void {
 			setTextureID(loader.id);

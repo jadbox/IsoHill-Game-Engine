@@ -18,6 +18,7 @@ package isohill.tmx
 	import isohill.Point3;
 	import starling.display.MovieClip;
 	import starling.textures.Texture;
+	import starling.textures.TextureSmoothing;
 	/**
 	 * The TMX plugin for the engine to bind the data to the renderer.
 	 * @author Jonathan Dunlap
@@ -55,8 +56,7 @@ package isohill.tmx
 				var pt3:Point3 = grid.toLayerPt(cellX, cellY);
 				var name:String = tmx.getImgSrc(_cell)+"_"+(iSprite++);
 				var sprite:IsoSprite = new IsoSprite(name, pt3);
-				 
-				sprite.setTextureID(tmx.getImgSrc(_cell), tmx.getImgFrame(_cell));
+				sprite.setTextureID(tmx.getImgSrc(_cell), tmx.getImgFrame(_cell), {smoothing: TextureSmoothing.NONE});
 
 				grid.push(sprite);
 			}

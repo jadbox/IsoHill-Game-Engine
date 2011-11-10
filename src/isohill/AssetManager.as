@@ -25,7 +25,6 @@ package isohill
 		
 		private var textures:Dictionary = new Dictionary();
 		private var assetLoaders:Dictionary = new Dictionary();
-		//private var textureVectors:Dictionary = new Dictionary(); // value is <Textures>[]
 		public function AssetManager() 
 		{
 			
@@ -50,7 +49,7 @@ package isohill
 			}
 			var image:Image;
 			if (textures[url] is Vector.<Texture>) {
-				//if (forceFrame > -1) {
+				//if (startingFrame > -1) {
 				//	image = new Image(textures[url][forceFrame]);
 				//}
 				//else 
@@ -62,13 +61,6 @@ package isohill
 			}
 			return image;
 		}
-		//public function getTexture(url:String, frame:int):Texture {
-		//	return textures[url + "@" + frame];
-		//}
-		//public function getTextures(url:String):Vector.<Texture> {
-		//	var vector
-		//	return textures[url + "@" + i];
-		//}
 		public function getLoader(id:String):ITextureLoader {
 			return assetLoaders[id];
 		}
