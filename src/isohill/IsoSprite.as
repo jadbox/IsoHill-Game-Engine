@@ -12,7 +12,6 @@ package isohill
 	import flash.display.BitmapData;
 	import flash.geom.Point;
 	import isohill.components.AsyncTexture;
-	import isohill.components.EventHandlerProxy;
 	import isohill.components.IComponent;
 	import isohill.components.IsoProjection;
 	import isohill.loaders.ITextureLoader;
@@ -58,8 +57,9 @@ package isohill
 			AssetManager.instance.addLoader(loader);
 		}
 		public function addEventListener(event:String, callBackFunction:Function):void {
-			if (!ready) components.push(new EventHandlerProxy(this, event, callBackFunction));
-			else image.addEventListener(event, callBackFunction);
+			if (image == null) throw new Error("Texture not set on IsoSprite yet");
+			image.addEventListener(event, callBackFunction);
+			image.touchable = true;
 		}
 		public function removeEventListener(event:String, callBackFunction:Function):void {
 			if (!ready) return; // TODO: remove the ASyncEventHandler from the components
