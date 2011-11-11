@@ -127,6 +127,7 @@ package starling.display
                 mTexture = value;
                 mVertexData.premultipliedAlpha = mTexture.premultipliedAlpha;
                 if (mVertexBuffer) createVertexBuffer();
+				setupVertexDataByTexture(value);
             }
         }
         
