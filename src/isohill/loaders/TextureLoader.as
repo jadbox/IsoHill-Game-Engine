@@ -12,7 +12,9 @@ package isohill.loaders
 	import flash.display.BitmapData;
 	import flash.geom.Rectangle;
 	import isohill.AssetManager;
+	import isohill.IsoSprite;
 	import isohill.loaders.ImgLoader;
+	import starling.display.Image;
 	import starling.textures.Texture;
 	/**
 	 * Loads one texture for one frame
@@ -20,31 +22,39 @@ package isohill.loaders
 	 */
 	public class TextureLoader implements ITextureLoader
 	{
-		public var url:String;
+		private var url:String;
 		
 		private var frames:Vector.<Rectangle>;
-		public var textures:Vector.<Texture>;
-		private var onLoadCallback:IOnTextureLoaded;
+		private var texture:Texture;
+		private static var proxyTexture:Texture;
 		
 		// onLoadCallback(url:String, index:Int, texture:Texture);
 		public function TextureLoader(url:String) 
 		{
 			this.url = url;
 			this.frames = frames;
-			ImgLoader.instance.getBitmapData(url, onLoad);
 		}
-		public function load(onLoadCallback:IOnTextureLoaded):void {
-			this.onLoadCallback = onLoadCallback;
-		}
+		public function getImage():Image {
+			if(proxyTexture==null) proxyTexture = Texture.empty(1,1);
+			return new starling.display.Image(proxyTexture);
+		}		
 		private function onLoad(bd:BitmapData):void {
-			var texture:Texture = Texture.fromBitmapData(bd);
-			if(onLoadCallback!==null) onLoadCallback.onTextureLoaded(url, texture);
-			onLoadCallback = null;
+			texture = Texture.fromBitmapData(bd);
 		}
-		public function get id():String { return url; }
-		
-		public static function loaded(url:String):Boolean {
-			return AssetManager.instance.hasLoader(url);
+		public function setTexture(sprite:IsoSprite):void {
+			if (texture == null) return;
+			sprite.image.texture = texture;
+			sprite.image.pivotY = sprite.image.height;
+			sprite.image.pivotX = 0;
+		}
+		public function get isLoaded():Boolean {
+			return texture !== null;
+		}
+		public function get id():String {
+			return url;
+		}
+		public function load():void {
+			ImgLoader.instance.getBitmapData(url, onLoad);
 		}
 	}
 

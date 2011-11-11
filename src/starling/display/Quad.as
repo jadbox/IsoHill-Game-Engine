@@ -61,14 +61,18 @@ package starling.display
         /** Creates a quad with a certain size and color. */
         public function Quad(width:Number, height:Number, color:uint=0xffffff)
         {
-            mVertexData = new VertexData(4, true);
+            setupVertexData(width, height, color);
+        }
+		/** PATCH: Sets up the vertex data on the Quad. Useful for reseting the size of the quad. */
+        protected function setupVertexData(width:Number, height:Number, color:uint = 0xffffff):void {
+			if (mVertexData != null && mVertexData.getPosition(3).x == width && mVertexData.getPosition(3).y == height) return; // does not need to be recreated
+			mVertexData = new VertexData(4, true);
             mVertexData.setPosition(0, 0.0, 0.0);
             mVertexData.setPosition(1, width, 0.0);
             mVertexData.setPosition(2, 0.0, height);
             mVertexData.setPosition(3, width, height);            
             mVertexData.setUniformColor(color);
-        }
-        
+		}
         /** Disposes vertex- and index-buffer of the quad. */
         public override function dispose():void
         {

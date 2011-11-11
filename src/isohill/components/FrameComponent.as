@@ -29,6 +29,12 @@ package isohill.components
 			this.loop = loop;
 			setFPS(fps);
 		}
+		public function onSetup(sprite:IsoSprite):void {
+			
+		}
+		public function onRemove():void {
+			
+		}
 		public function setFPS(fps:int):void {
 			this.fps = fps;
 			if (mc) mc.fps = fps;

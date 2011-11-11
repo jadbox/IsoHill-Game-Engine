@@ -9,6 +9,8 @@
 */
 package isohill.loaders 
 {
+	import isohill.IsoSprite;
+	import starling.display.Image;
 	
 	/**
 	 * Interface to start loading a texture
@@ -16,8 +18,11 @@ package isohill.loaders
 	 */
 	public interface ITextureLoader 
 	{
-		function load(onLoadCallback:IOnTextureLoaded):void;
+		function setTexture(sprite:IsoSprite):void;
+		function get isLoaded():Boolean;
 		function get id():String;
+		function getImage():Image;
+		function load():void;
 	}
 	
 }

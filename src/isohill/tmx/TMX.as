@@ -34,7 +34,7 @@ package isohill.tmx
 		public var objectsHash:Dictionary; // key is the layer name; values are TMXObjectgroup
 		// ---
 		public var tilesets:Vector.<TMXTileset>; // all asset ids are indexed here
-		private var _tilesets:Vector.<TMXTileset>; // unique tilesets
+		public var uniqueTilesets:Vector.<TMXTileset>; // unique tilesets
 		public var data:XML; // raw TMX data
 		// prefix for the image urls based on where the tmx map is loaded from
 		private var imgsURL:String;
@@ -61,25 +61,24 @@ package isohill.tmx
 			return gid - tilesets[gid].firstgid
 		}
 		public function hasFullyLoaded():Boolean {
-			for each(var tile:TMXTileset in _tilesets) {
+			for each(var tile:TMXTileset in uniqueTilesets) {
 				if (tile.loaded == false) return false;
 			}
 			return true;
 		}
 		private function parseTilesets():void {
 			var tileSetBlocks:XMLList = data.tileset;
-			_tilesets = new Vector.<TMXTileset>(tileSetBlocks.length(), true);
+			uniqueTilesets = new Vector.<TMXTileset>(tileSetBlocks.length(), true);
 			tilesets = new Vector.<TMXTileset>(maxGid+1, true);
 			var tileIndex:int=0;
 			for each(var tileBlock:XML in tileSetBlocks) {
-				var tileset:TMXTileset = _tilesets[tileIndex++] = new TMXTileset(tileBlock);
-				AssetManager.instance.addLoader(new TexturesLoader(imgsURL+tileset.source.source, tileset.areas));
+				var tileset:TMXTileset = uniqueTilesets[tileIndex++] = new TMXTileset(tileBlock);
 			}
 			var tilesetIndex:int = 0;
 			for (var i:int = 1; i <= maxGid; i++) {
-				var nextGid:int = (tilesetIndex < (_tilesets.length - 1))?_tilesets[tilesetIndex + 1].firstgid:-1;
-				var tilesetReference:TMXTileset = _tilesets[tilesetIndex];
-				if (i == nextGid) tilesetReference = _tilesets[++tilesetIndex];
+				var nextGid:int = (tilesetIndex < (uniqueTilesets.length - 1))?uniqueTilesets[tilesetIndex + 1].firstgid:-1;
+				var tilesetReference:TMXTileset = uniqueTilesets[tilesetIndex];
+				if (i == nextGid) tilesetReference = uniqueTilesets[++tilesetIndex];
 				tilesets[i] = tilesetReference;
 			}
 			trace("done parsing tilsets");

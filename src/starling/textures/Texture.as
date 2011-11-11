@@ -201,6 +201,10 @@ package starling.textures
             {
                 var currentWidth:int  = data.width  >> 1;
                 var currentHeight:int = data.height >> 1;
+				// PATCH
+				currentHeight = Math.max(currentHeight, 1);
+				currentWidth = Math.max(currentWidth, 1);
+				//
                 var level:int = 1;
                 var canvas:BitmapData = new BitmapData(currentWidth, currentHeight, true, 0);
                 var transform:Matrix = new Matrix(.5, 0, 0, .5);

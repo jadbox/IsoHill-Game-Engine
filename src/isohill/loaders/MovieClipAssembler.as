@@ -16,10 +16,12 @@ package isohill.loaders
 	import flash.events.Event;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
+	import isohill.AssetManager;
 	import isohill.components.FrameComponent;
 	import isohill.IsoSprite;
 	import isohill.Point3;
 	import starling.core.Starling;
+	import starling.display.Image;
 	import starling.textures.Texture;
 	import starling.textures.TextureAtlas;
 	/**
@@ -29,10 +31,11 @@ package isohill.loaders
 	public class MovieClipAssembler implements ITextureLoader 
 	{
 		private var items:MovieClipAssemblerItem;
-		private var onLoadCallback:IOnTextureLoaded;
+		private static var proxyTexture:Vector.<Texture>;
 		
 		private var _id:String;
 		private var fps:int;
+		private var textures:Vector.<Texture>;
 		public function MovieClipAssembler(items:MovieClipAssemblerItem, fps:int=12) 
 		{
 			this.items = items;
@@ -46,18 +49,27 @@ package isohill.loaders
 			sprite.addComponent(component);
 			return component;
 		}
+		public function getImage():Image {
+			if(proxyTexture==null) proxyTexture = new <Texture>[Texture.empty(25,25, 0xffff0000)];
+			return new starling.display.MovieClip(proxyTexture);
+		}
 		/* INTERFACE isohill.loaders.ITextureLoader */
-		
-		public function load(onLoadCallback:IOnTextureLoaded):void 
+		public function setTexture(sprite:IsoSprite):void {
+			AssetManager._setupMovieClip(sprite, textures);
+			sprite.image.pivotY = sprite.image.height;
+			sprite.image.pivotX = 0;
+		}
+		public function get isLoaded():Boolean {
+			return textures !== null;
+		}
+		public function load():void 
 		{
-			this.onLoadCallback = onLoadCallback;
 			items.load(onLoad);
 		}
 		private function onLoad(mc:MovieClip):void {
 			if (mc == null) throw new Error("failed to load MovieClipAssemblerItem");
 			//var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc);
-			var textures:Vector.<Texture> = getTextures(mc);
-			onLoadCallback.onTexturesLoaded(_id, textures);
+			textures = getTextures(mc);
 		}
 		// Converts a MovieClip to a series of Textures in a Vector
 		public static function getTextures(mc:MovieClip):Vector.<Texture> {

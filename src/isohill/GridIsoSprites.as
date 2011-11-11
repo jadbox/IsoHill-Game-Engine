@@ -109,12 +109,12 @@ package isohill
 			updateLocation(val);
 			spriteHash[val.name] = val;
 			val.layer = this;
-			if(val.ready) addStarlingChild(val.image);
+			addStarlingChild(val.image);
 			return val;
 		}
 		public function remove(val:IsoSprite):IsoSprite {
 			if (val.layerIndex == -1 || val.layer==null) return val;
-			if (val.ready) container.removeChild(val.image);
+			container.removeChild(val.image);
 			
 			removeFromGridData(val);
 			val.layer = null;
@@ -140,7 +140,6 @@ package isohill
 				if (layer != null) for each(var sprite:IsoSprite in layer) {
 					if (sprite == null) continue;
 					updateLocation(sprite);
-					if (sprite.image!==null && sprite.image.parent === null) addStarlingChild(sprite.image); // sprite is loaded and ready to be added to the container
 					sprite.advanceTime(time);
 				}
 			}

@@ -27,6 +27,12 @@ package isohill.components
 			this.eventName = eventName;
 			this.callBackFunction = callBackFunction;
 		}
+		public function onSetup(sprite:IsoSprite):void {
+			
+		}
+		public function onRemove():void {
+			
+		}
 		public function advanceTime(time:Number, sprite:IsoSprite):void {
 			sprite.components.splice(sprite.components.indexOf(this), 1);
 			sprite.image.touchable = true;

@@ -77,7 +77,6 @@ package starling.display
                 throw new ArgumentError("Empty texture array");
             }
         }
-        
         // frame manipulation
         
         /** Adds an additional frame, optionally with a sound and a custom duration. If the 
@@ -97,6 +96,7 @@ package starling.display
             mSounds.splice(frameID, 0, sound);
             mDurations.splice(frameID, 0, duration);
             mTotalTime += duration;
+			if (frameID == 0 && numFrames == 1) setupVertexDataByTexture(texture);
         }
         
         /** Removes the frame at a certain ID. The successors will move down. */

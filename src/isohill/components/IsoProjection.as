@@ -35,6 +35,12 @@ package isohill.components
 			projectionInverse = (projection.clone());
 			projectionInverse.invert();
 		}
+		public function onSetup(sprite:IsoSprite):void {
+			
+		}
+		public function onRemove():void {
+			
+		}
 		public function advanceTime(time:Number, sprite:IsoSprite):void {
 			var isoPt:Point = sprite.pt;
 			var image:Image = sprite.image;

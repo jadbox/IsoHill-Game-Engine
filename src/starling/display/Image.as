@@ -55,15 +55,9 @@ package starling.display
                 var frame:Rectangle = texture.frame;
                 var width:Number  = frame ? frame.width  : texture.width;
                 var height:Number = frame ? frame.height : texture.height;
-                
-                super(width, height);
-                
-                mVertexData.premultipliedAlpha = texture.premultipliedAlpha;
-                mVertexData.setTexCoords(0, 0.0, 0.0);
-                mVertexData.setTexCoords(1, 1.0, 0.0);
-                mVertexData.setTexCoords(2, 0.0, 1.0);
-                mVertexData.setTexCoords(3, 1.0, 1.0);
                 mTexture = texture;
+                super(width, height);
+ 
                 mSmoothing = TextureSmoothing.BILINEAR;
             }
             else
@@ -71,6 +65,22 @@ package starling.display
                 throw new ArgumentError("Texture cannot be null");                
             }
         }
+		// PATCH: initializes the vertex data by Texture
+		protected function setupVertexDataByTexture(texture:Texture):void {
+			var frame:Rectangle = texture.frame;
+            var width:Number  = frame ? frame.width  : texture.width;
+            var height:Number = frame ? frame.height : texture.height;
+			setupVertexData(width, height);
+		}
+		/** @inheritDoc */
+		protected override function setupVertexData(width:Number, height:Number, color:uint = 0xffffff):void {
+			super.setupVertexData(width, height, color);
+			mVertexData.premultipliedAlpha = mTexture.premultipliedAlpha;
+            mVertexData.setTexCoords(0, 0.0, 0.0);
+            mVertexData.setTexCoords(1, 1.0, 0.0);
+            mVertexData.setTexCoords(2, 0.0, 1.0);
+            mVertexData.setTexCoords(3, 1.0, 1.0);
+		}
         
         /** Disposes vertex- and index-buffer, but does NOT dispose the texture! */
         public override function dispose():void

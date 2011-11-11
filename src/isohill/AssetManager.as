@@ -9,8 +9,8 @@
 */
 package isohill 
 {
+	import flash.media.Sound;
 	import flash.utils.Dictionary;
-	import isohill.loaders.IOnTextureLoaded;
 	import isohill.loaders.ITextureLoader;
 	import starling.display.Image;
 	import starling.display.MovieClip;
@@ -19,47 +19,44 @@ package isohill
 	 * Indexer for Textures
 	 * @author Jonathan Dunlap
 	 */
-	public class AssetManager implements IOnTextureLoaded
+	public class AssetManager
 	{
 		public static var instance:AssetManager = new AssetManager();
 		
-		private var textures:Dictionary = new Dictionary();
 		private var assetLoaders:Dictionary = new Dictionary();
 		public function AssetManager() 
 		{
 			
 		}
+		// Internal utility use
+		public static function _setupMovieClip(sprite:IsoSprite, textures:Vector.<Texture>, durations:Vector.<Number> = null, snds:Vector.<Sound> = null):void {
+			var mc:starling.display.MovieClip = starling.display.MovieClip(sprite.image);
+			if (textures == null) throw new Error("Textures were null");
+			else if (mc == null) throw new Error("starling.display.MovieClip was null");
+			while (mc.numFrames > 0) mc.removeFrameAt(0);
+			//mc.dispose();
+			var num:int = textures.length;
+			for (var i:int = 0; i < num; i++) {
+				mc.addFrame(textures[i], snds?snds[i]:null, durations?durations[i]:null);
+			}
+			mc.currentFrame = sprite.frame;
+		}
+		// Add a Texture Loader to the AssetManger
 		public function addLoader(loader:ITextureLoader):void {
-			if (hasLoader(loader.id)) return;
+			if (hasLoader(loader.id)) return; // prevent duplicate loaders from being added
 			assetLoaders[loader.id] = loader;
-			loader.load(this);
-		}
-		public function onTextureLoaded(id:String, texture:Texture):void {
-			if (texture == null) throw new Error("null texture set for id " + id);
-			textures[id] = texture;
-		}
-		public function onTexturesLoaded(id:String, texture:Vector.<Texture>):void {
-			if (texture == null) throw new Error("null texture set for id " + id);
-			textures[id] = texture;
+			loader.load();
 		}
 		//, forceFrame:int=-1
-		public function getImage(url:String, startingFrame:int = 0):Image {
-			if (textures[url] == null) {
-				return null; // texture unavailable for Image creation
-			}
-			var image:Image;
-			if (textures[url] is Vector.<Texture>) {
-				//if (startingFrame > -1) {
-				//	image = new Image(textures[url][forceFrame]);
-				//}
-				//else 
-				image = new MovieClip(textures[url]);
-				MovieClip(image).currentFrame = startingFrame;
-			}
-			else {
-				image = new Image(textures[url]);
-			}
-			return image;
+		public function getImage(id:String):Image {
+			var loader:ITextureLoader = assetLoaders[id];
+			if (loader == null) throw new Error("loader not added for asset ID: " + id);
+			return loader.getImage();
+		}
+		public function isLoaded(id:String):Boolean {
+			var loader:ITextureLoader = getLoader(id);
+			if (loader===null) return false;
+			return loader.isLoaded;
 		}
 		public function getLoader(id:String):ITextureLoader {
 			return assetLoaders[id];

@@ -11,6 +11,7 @@ package isohill.components
 {
 	import isohill.AssetManager;
 	import isohill.IsoSprite;
+	import isohill.loaders.ITextureLoader;
 	import starling.display.Image;
 	import starling.textures.Texture;
 	import starling.textures.TextureSmoothing;
@@ -23,23 +24,25 @@ package isohill.components
 		private var assetManagerKey:String;
 		private static var I:int = 0; // current global async index
 		private var i:int = 0; // global index for debugging
-		private var frame:int;
-		private var imageDecorator:Object;
-		public function AsyncTexture(assetManagerKey:String, frame:int=0, imageDecorator:Object=null) 
+
+		public function AsyncTexture(assetManagerKey:String) 
 		{
 			i = ++I;
-			this.assetManagerKey = assetManagerKey;
-			this.frame = frame;
-			this.imageDecorator = imageDecorator;
+			this.assetManagerKey = assetManagerKey;	
+		}
+		public function onSetup(sprite:IsoSprite):void {
+			sprite.setImage( AssetManager.instance.getImage(assetManagerKey) );
+			//trace("setup " + i);
+		}
+		public function onRemove():void {
+			
 		}
 		public function advanceTime(time:Number, sprite:IsoSprite):void {
-			var image:Image = AssetManager.instance.getImage(assetManagerKey, frame);
-			if (image == null) return; 
-			for (var prop:String in imageDecorator) {
-				image[prop] = imageDecorator[prop];
-			}
+			var loader:ITextureLoader = AssetManager.instance.getLoader(assetManagerKey);
+			if (loader.isLoaded == false) return;
+			loader.setTexture(sprite);
 			sprite.components.splice(sprite.components.indexOf(this), 1);
-			sprite.setImage(image);
+			//trace("loaded " + i);
 		}
 		public function requiresImage():Boolean { 
 			return false;

@@ -11,7 +11,10 @@ package isohill.loaders
 {
 	import flash.display.BitmapData;
 	import flash.geom.Rectangle;
+	import isohill.AssetManager;
+	import isohill.IsoSprite;
 	import isohill.loaders.ImgLoader;
+	import starling.display.Image;
 	import starling.textures.Texture;
 	/**
 	 * Loads one texture for multiple frames
@@ -22,33 +25,38 @@ package isohill.loaders
 		public var url:String;
 		
 		private var frames:Vector.<Rectangle>;
-		//public var textures:Vector.<Texture>;
-		private var onLoadCallback:IOnTextureLoaded;
-		
-		// onLoadCallback(url:String, index:Int, texture:Texture);
+		private var textures:Vector.<Texture>;
+		private static var proxyTexture:Vector.<Texture>;
+
 		public function TexturesLoader(url:String, frames:Vector.<Rectangle>) 
 		{
 			this.url = url;
 			this.frames = frames;
-			
-			ImgLoader.instance.getBitmapData(url, onLoad);
 		}
-		public function load(onLoadCallback:IOnTextureLoaded):void {
-			this.onLoadCallback = onLoadCallback;
+		public function getImage():Image {
+			if(proxyTexture==null) proxyTexture = new <Texture>[Texture.empty(22, 22, 0xff990000)];
+			return new starling.display.MovieClip(proxyTexture);
+		}
+		public function load():void {
+			ImgLoader.instance.getBitmapData(url, onLoad);
 		}
 		private function onLoad(bd:BitmapData):void {
 			var bigTexture:Texture = Texture.fromBitmapData(bd);
-			//var textures:Vector.<Texture> = new Vector.<Texture>(frames.length, true);
 			var i:int = 0;
-			var textures:Vector.<Texture> = new <Texture>[];
+			textures = new <Texture>[];
 			for each (var frame:Rectangle in frames) {
 				textures.push( Texture.fromTexture(bigTexture, frame) );
-			///	if(onLoadCallback!==null) onLoadCallback.onTextureLoaded(url, i++, Texture.fromTexture(bigTexture, frame));
 			}
-			onLoadCallback.onTexturesLoaded(url, textures);
-			onLoadCallback = null;
 		}
 		public function get id():String { return url; }
+		public function setTexture(sprite:IsoSprite):void {
+			AssetManager._setupMovieClip(sprite, textures);
+			sprite.image.pivotY = sprite.image.height;
+			sprite.image.pivotX = 0;
+		}
+		public function get isLoaded():Boolean {
+			return textures !== null;
+		}
 	}
 
 }

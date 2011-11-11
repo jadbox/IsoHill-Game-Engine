@@ -29,6 +29,7 @@ package isohill
 	 */
 	public class IsoSprite 
 	{
+		public var frame:int = 0; // frame number if the asset is a movieclip
 		public var name:String; // Identifier
 		public var type:String; // type label
 		public var image:Image; // the actual Starling asset
@@ -47,10 +48,10 @@ package isohill
 
 			components = new <IComponent>[IsoProjection.instance];
 		}
-		public function setTextureID(id:String, frame:int = 0, imageDecorator:Object=null):void {
+		public function setTextureID(id:String):void {
 			if (ready) return;
 			//TODO: for each(var item:IComponent in components.filter(function(t:IComponent):Boolean { return t is AsyncTexture; } )) components.splice(components.indexOf(item), 1);
-			components.push(new AsyncTexture(id, frame, imageDecorator));
+			addComponent(new AsyncTexture(id));
 		}
 		public function setTextureLoader(loader:ITextureLoader):void {
 			setTextureID(loader.id);
@@ -68,21 +69,22 @@ package isohill
 			if (layer != null) layer.remove(this);
 		}
 		public function addComponent(c:IComponent):IComponent {
+			c.onSetup(this);
 			components.push(c); return c;
 		}
 		public function removeComponent(component:IComponent):void {
+			component.onRemove();
 			var index:int = components.indexOf(component);
 			if (index != -1) components.splice(index, 1);
 		}
-		// Set the texture- this can only be done once
 		public function setImage(img:Image):void {
 			if (img == null) throw new Error("img is null");
-			if (image != null) return;
+			if (image != null && img != image) {
+				if (image.parent) image.parent.removeChild(image);
+			}
 
 			this.image = img;
 			image.touchable = false;
-			image.pivotY = image.texture.height;
-			image.pivotX = 0;//image.texture.width / 2;
 		}
 		// Class is ready to be used and added to the display list
 		public function get ready():Boolean {

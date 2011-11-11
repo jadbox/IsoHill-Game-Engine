@@ -16,6 +16,8 @@ package isohill.components
 	 */
 	public interface IComponent 
 	{
+		function onSetup(sprite:IsoSprite):void;
+		function onRemove():void;
 		function advanceTime(time:Number, sprite:IsoSprite):void;
 		function requiresImage():Boolean;
 	}

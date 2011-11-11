@@ -14,6 +14,8 @@ package isohill.tmx
 	import isohill.GridIsoSprites;
 	import isohill.IsoHill;
 	import isohill.IsoSprite;
+	import isohill.loaders.TextureLoader;
+	import isohill.loaders.TexturesLoader;
 	import isohill.plugins.IPlugin;
 	import isohill.Point3;
 	import starling.display.MovieClip;
@@ -34,6 +36,7 @@ package isohill.tmx
 			linkedLayer = new <GridIsoSprites>[];
 		}
 		public function init():void {
+			loadTiles();
 			for (var x:int = 0; x < tmx.width; x++) {
 				for (var y:int = 0; y < tmx.height; y++) {
 					makeSprites(x, y);
@@ -45,7 +48,11 @@ package isohill.tmx
 		public function advanceTime(time:Number, engine:IsoHill):void {
 
 		}
-		
+		private function loadTiles():void {
+			for each(var tile:TMXTileset in tmx.uniqueTilesets) {
+				AssetManager.instance.addLoader(new TexturesLoader(tmx.getImgSrc(tile.firstgid), tile.areas));
+			}
+		}
 		private function makeSprites(cellX:int, cellY:int):void {
 			// in layers
 			for (var i:int = 0; i < tmx.layersArray.length; i++) {
@@ -54,10 +61,10 @@ package isohill.tmx
 				if (_cell == 0 || isNaN(_cell)) continue;
 				var grid:GridIsoSprites = linkedLayer[i];
 				var pt3:Point3 = grid.toLayerPt(cellX, cellY);
-				var name:String = tmx.getImgSrc(_cell)+"_"+(iSprite++);
+				var name:String = tmx.getImgSrc(_cell) + "_" + (iSprite++);
 				var sprite:IsoSprite = new IsoSprite(name, pt3);
-				sprite.setTextureID(tmx.getImgSrc(_cell), tmx.getImgFrame(_cell), {smoothing: TextureSmoothing.NONE});
-
+				sprite.setTextureID(tmx.getImgSrc(_cell));
+				sprite.frame = tmx.getImgFrame(_cell);
 				grid.push(sprite);
 			}
 			// in object layers
@@ -71,8 +78,8 @@ package isohill.tmx
 				var sprite:IsoSprite = new IsoSprite(null, new Point3(obj.x, obj.y));
 				sprite.name = obj.name; 
 				sprite.type = obj.type;
-				sprite.setTextureID(tmx.getImgSrc(obj.gid), tmx.getImgFrame( obj.gid ));
-
+				sprite.setTextureID(tmx.getImgSrc(obj.gid));
+				//sprite.image.frame = , tmx.getImgFrame( obj.gid ;
 				grid.push(sprite);
 			}
 		}
