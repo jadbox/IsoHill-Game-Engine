@@ -13,6 +13,7 @@ package isohill.tmx
 	import isohill.components.AsyncTexture;
 	import isohill.GridIsoSprites;
 	import isohill.IsoHill;
+	import isohill.IsoMovieClip;
 	import isohill.IsoSprite;
 	import isohill.loaders.TextureLoader;
 	import isohill.loaders.TexturesLoader;
@@ -62,9 +63,10 @@ package isohill.tmx
 				var grid:GridIsoSprites = linkedLayer[i];
 				var pt3:Point3 = grid.toLayerPt(cellX, cellY);
 				var name:String = tmx.getImgSrc(_cell) + "_" + (iSprite++);
-				var sprite:IsoSprite = new IsoSprite(name, pt3);
-				sprite.setTextureID(tmx.getImgSrc(_cell));
-				sprite.frame = tmx.getImgFrame(_cell);
+				var assetID:String = tmx.getImgSrc(_cell);
+				var sprite:IsoMovieClip = new IsoMovieClip(assetID, name, pt3);//IsoSprite = new IsoSprite(assetID, name, pt3);
+				sprite.currentFrame = tmx.getImgFrame(_cell);
+				
 				grid.push(sprite);
 			}
 			// in object layers
@@ -75,10 +77,10 @@ package isohill.tmx
 				var tile:TMXTileset = tmx.tilesets[obj.gid];
 				// TODO: this is not working as the texture hasn't loaded yet when this method is called
 				//var texure:Texture = AssetManager.instance.getTexture(tmx.imgsURL + tile.source.source, obj.gid - tile.firstgid); 
-				var sprite:IsoSprite = new IsoSprite(null, new Point3(obj.x, obj.y));
+				var id:String = tmx.getImgSrc(obj.gid);
+				var sprite:IsoSprite = new IsoSprite(id, String(grid.numChildren), new Point3(obj.x, obj.y));
 				sprite.name = obj.name; 
 				sprite.type = obj.type;
-				sprite.setTextureID(tmx.getImgSrc(obj.gid));
 				//sprite.image.frame = , tmx.getImgFrame( obj.gid ;
 				grid.push(sprite);
 			}

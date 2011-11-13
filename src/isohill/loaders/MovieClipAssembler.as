@@ -42,13 +42,6 @@ package isohill.loaders
 			_id = items.id;
 			this.fps = fps;
 		}
-		// Initializes a newly created sprite with the asset ID and FrameComponent for animation
-		public function setupSprite(sprite:IsoSprite, loop:Boolean=false):FrameComponent {
-			sprite.setTextureLoader(this);
-			var component:FrameComponent = new FrameComponent(loop, fps);
-			sprite.addComponent(component);
-			return component;
-		}
 		public function getImage():Image {
 			if(proxyTexture==null) proxyTexture = new <Texture>[Texture.empty(25,25, 0xffff0000)];
 			return new starling.display.MovieClip(proxyTexture);

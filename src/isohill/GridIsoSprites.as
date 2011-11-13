@@ -121,6 +121,9 @@ package isohill
 			delete spriteHash[val.name];
 			return val;
 		}
+		public function get numChildren():int {
+			return container.numChildren;
+		}
 		public function setCell(val:Vector.<IsoSprite>):Vector.<IsoSprite> {
 			for each (var sprite:IsoSprite in val) push(sprite);
 			return val;

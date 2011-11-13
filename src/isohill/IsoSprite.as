@@ -28,7 +28,6 @@ package isohill
 	 */
 	public class IsoSprite 
 	{
-		public var frame:int = 0; // frame number if the asset is a movieclip
 		public var name:String; // Identifier
 		public var type:String; // type label
 		public var image:Image; // the actual Starling asset
@@ -39,22 +38,14 @@ package isohill
 		internal var layerIndex:int=-1; // cell index container (internal use only)
 		
 		// Must be given a texture or set with setTexture before use
-		public function IsoSprite(name:String, pt:Point3=null, state:State=null) 
+		public function IsoSprite(assetID:String, name:String, pt:Point3=null, state:State=null) 
 		{
 			this.name = name;
 			this.state = state!=null?state:new State();
 			this.pt = pt != null?pt:new Point3();
-
+			
 			components = new <IComponent>[IsoProjection.instance];
-		}
-		public function setTextureID(id:String):void {
-			if (ready) return;
-			//TODO: for each(var item:IComponent in components.filter(function(t:IComponent):Boolean { return t is AsyncTexture; } )) components.splice(components.indexOf(item), 1);
-			addComponent(new AsyncTexture(id));
-		}
-		public function setTextureLoader(loader:ITextureLoader):void {
-			setTextureID(loader.id);
-			AssetManager.instance.addLoader(loader);
+			addComponent(new AsyncTexture(assetID));
 		}
 		public function addEventListener(event:String, callBackFunction:Function):void {
 			if (image == null) throw new Error("Texture not set on IsoSprite yet");
@@ -65,18 +56,22 @@ package isohill
 			if (!ready) return; // TODO: remove the ASyncEventHandler from the components
 			image.removeEventListener(event, callBackFunction);
 		}
+		// Remove IsoSprite from it's GridIsoSprites layer
 		public function remove():void {
 			if (layer != null) layer.remove(this);
 		}
+		// Adds a component to this IsoSprite
 		public function addComponent(c:IComponent):IComponent {
 			c.onSetup(this);
 			components.push(c); return c;
 		}
+		// Removes component by reference
 		public function removeComponent(component:IComponent):void {
 			component.onRemove();
 			var index:int = components.indexOf(component);
 			if (index != -1) components.splice(index, 1);
 		}
+		// Internal use for setting the base Image or MovieClip
 		public function setImage(img:Image):void {
 			if (img == null) throw new Error("img is null");
 			if (image != null && img != image) {

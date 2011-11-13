@@ -37,9 +37,9 @@ package isohill
 			//mc.dispose();
 			var num:int = textures.length;
 			for (var i:int = 0; i < num; i++) {
-				mc.addFrame(textures[i], snds?snds[i]:null, durations?durations[i]:null);
+				mc.addFrame(textures[i], snds?snds[i]:null, durations!=null?durations[i]:-1);
 			}
-			mc.currentFrame = sprite.frame;
+			mc.currentFrame = mc.currentFrame; // Starling Texture update hack
 		}
 		// Add a Texture Loader to the AssetManger
 		public function addLoader(loader:ITextureLoader):void {
