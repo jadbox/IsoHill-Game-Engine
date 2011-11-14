@@ -7,18 +7,33 @@
 * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 */
-package isohill.loaders 
+package isohill.components 
 {
-	import starling.textures.Texture;
-	
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+	import isohill.IsoDisplay;
+	import isohill.GridBool;
+	import isohill.IsoSprite;
 	/**
-	 * Defines a method to be called when a texture has finished loading
+	 * This component wraps the Starling Touch events but takes into account transparency
 	 * @author Jonathan Dunlap
 	 */
-	public interface IOnTextureLoaded 
+	public class TouchComponent implements IComponent 
 	{
-		function onTextureLoaded(url:String, texture:Texture):void;
-		function onTexturesLoaded(url:String, texture:Vector.<Texture>):void;
+		public var transparentArea:GridBool;
+		public function TouchComponent(bmd:BitmapData) 
+		{
+			
+		}
+		public static function fromBitmap(b:Bitmap):TouchComponent {
+			return new TouchComponent(b.bitmapData);
+		}
+		/* INTERFACE isohill.components.IComponent */
+		
+		public function advanceTime(time:Number, sprite:IsoDisplay):void 
+		{
+			
+		}
 	}
-	
+
 }

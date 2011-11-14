@@ -12,6 +12,7 @@ package isohill
 	import flash.media.Sound;
 	import flash.utils.Dictionary;
 	import isohill.loaders.ITextureLoader;
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.display.MovieClip;
 	import starling.textures.Texture;
@@ -28,19 +29,6 @@ package isohill
 		{
 			
 		}
-		// Internal utility use
-		public static function _setupMovieClip(sprite:IsoSprite, textures:Vector.<Texture>, durations:Vector.<Number> = null, snds:Vector.<Sound> = null):void {
-			var mc:starling.display.MovieClip = starling.display.MovieClip(sprite.image);
-			if (textures == null) throw new Error("Textures were null");
-			else if (mc == null) throw new Error("starling.display.MovieClip was null");
-			while (mc.numFrames > 0) mc.removeFrameAt(0);
-			//mc.dispose();
-			var num:int = textures.length;
-			for (var i:int = 0; i < num; i++) {
-				mc.addFrame(textures[i], snds?snds[i]:null, durations!=null?durations[i]:-1);
-			}
-			mc.currentFrame = mc.currentFrame; // Starling Texture update hack
-		}
 		// Add a Texture Loader to the AssetManger
 		public function addLoader(loader:ITextureLoader):void {
 			if (hasLoader(loader.id)) return; // prevent duplicate loaders from being added
@@ -48,10 +36,10 @@ package isohill
 			loader.load();
 		}
 		//, forceFrame:int=-1
-		public function getImage(id:String):Image {
+		public function getImage(id:String):DisplayObject {
 			var loader:ITextureLoader = assetLoaders[id];
 			if (loader == null) throw new Error("loader not added for asset ID: " + id);
-			return loader.getImage();
+			return loader.getDisplay();
 		}
 		public function isLoaded(id:String):Boolean {
 			var loader:ITextureLoader = getLoader(id);

@@ -11,7 +11,7 @@ package isohill.tmx
 {
 	import isohill.AssetManager;
 	import isohill.components.AsyncTexture;
-	import isohill.GridIsoSprites;
+	import isohill.GridDisplay;
 	import isohill.IsoHill;
 	import isohill.IsoMovieClip;
 	import isohill.IsoSprite;
@@ -29,12 +29,12 @@ package isohill.tmx
 	public class TMXPlugin implements IPlugin
 	{
 		public var tmx:TMX;
-		public var linkedLayer:Vector.<GridIsoSprites>;
+		public var linkedLayer:Vector.<GridDisplay>;
 		private var iSprite:int=0;
 		public function TMXPlugin(tmx:TMX) 
 		{
 			this.tmx = tmx;
-			linkedLayer = new <GridIsoSprites>[];
+			linkedLayer = new <GridDisplay>[];
 		}
 		public function init():void {
 			loadTiles();
@@ -60,7 +60,7 @@ package isohill.tmx
 				var layer:TMXLayer = tmx.layersArray[i]; if (layer == null) continue;
 				var _cell:int = layer.getCell(cellX, cellY); // temp
 				if (_cell == 0 || isNaN(_cell)) continue;
-				var grid:GridIsoSprites = linkedLayer[i];
+				var grid:GridDisplay = linkedLayer[i];
 				var pt3:Point3 = grid.toLayerPt(cellX, cellY);
 				var name:String = tmx.getImgSrc(_cell) + "_" + (iSprite++);
 				var assetID:String = tmx.getImgSrc(_cell);
@@ -72,21 +72,21 @@ package isohill.tmx
 			// in object layers
 			
 		}
-		public function addObjectsToLayer(grid:GridIsoSprites, group:TMXObjectgroup):void {
+		public function addObjectsToLayer(grid:GridDisplay, group:TMXObjectgroup):void {
 			for each(var obj:TMXObject in group.objects) {
 				var tile:TMXTileset = tmx.tilesets[obj.gid];
 				// TODO: this is not working as the texture hasn't loaded yet when this method is called
 				//var texure:Texture = AssetManager.instance.getTexture(tmx.imgsURL + tile.source.source, obj.gid - tile.firstgid); 
 				var id:String = tmx.getImgSrc(obj.gid);
-				var sprite:IsoSprite = new IsoSprite(id, String(grid.numChildren), new Point3(obj.x, obj.y));
+				var sprite:IsoMovieClip = new IsoMovieClip(id, String(grid.numChildren), new Point3(obj.x, obj.y));
 				sprite.name = obj.name; 
 				sprite.type = obj.type;
-				//sprite.image.frame = , tmx.getImgFrame( obj.gid ;
+				sprite.currentFrame = tmx.getImgFrame( obj.gid );
 				grid.push(sprite);
 			}
 		}
-		public function makeEmptyGridOfSize(tmxLayerIndex:int, name:String):GridIsoSprites {
-			var layer:GridIsoSprites = new GridIsoSprites(name, tmx.width, tmx.height, tmx.tileWidth, tmx.tileHeight);
+		public function makeEmptyGridOfSize(tmxLayerIndex:int, name:String):GridDisplay {
+			var layer:GridDisplay = new GridDisplay(name, tmx.width, tmx.height, tmx.tileWidth, tmx.tileHeight);
 			for (var i:int = 0; i <= tmxLayerIndex; i++) {
 				if (i == linkedLayer.length) linkedLayer.push(null);
 			}

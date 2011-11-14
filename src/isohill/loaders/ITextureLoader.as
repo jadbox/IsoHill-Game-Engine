@@ -9,7 +9,9 @@
 */
 package isohill.loaders 
 {
+	import isohill.IsoDisplay;
 	import isohill.IsoSprite;
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	
 	/**
@@ -18,10 +20,10 @@ package isohill.loaders
 	 */
 	public interface ITextureLoader 
 	{
-		function setTexture(sprite:IsoSprite):void;
+		function setTexture(sprite:IsoDisplay):void;
 		function get isLoaded():Boolean;
 		function get id():String;
-		function getImage():Image;
+		function getDisplay():DisplayObject;
 		function load():void;
 	}
 	

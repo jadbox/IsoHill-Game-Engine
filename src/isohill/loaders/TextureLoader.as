@@ -10,10 +10,13 @@
 package isohill.loaders 
 {
 	import flash.display.BitmapData;
+	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import isohill.IsoDisplay;
 	import isohill.AssetManager;
 	import isohill.IsoSprite;
 	import isohill.loaders.ImgLoader;
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.textures.Texture;
 	/**
@@ -23,29 +26,25 @@ package isohill.loaders
 	public class TextureLoader implements ITextureLoader
 	{
 		private var url:String;
-		
-		private var frames:Vector.<Rectangle>;
+		private var offset:Point;
 		private var texture:Texture;
 		private static var proxyTexture:Texture;
 		
-		// onLoadCallback(url:String, index:Int, texture:Texture);
-		public function TextureLoader(url:String) 
+		public function TextureLoader(url:String, offet:Point=null) 
 		{
 			this.url = url;
-			this.frames = frames;
+			this.offset = offset?offset:new Point();
 		}
-		public function getImage():Image {
+		public function getDisplay():DisplayObject {
 			if(proxyTexture==null) proxyTexture = Texture.empty(1,1);
 			return new starling.display.Image(proxyTexture);
 		}		
 		private function onLoad(bd:BitmapData):void {
 			texture = Texture.fromBitmapData(bd);
 		}
-		public function setTexture(sprite:IsoSprite):void {
+		public function setTexture(sprite:IsoDisplay):void {
 			if (texture == null) return;
-			sprite.image.texture = texture;
-			sprite.image.pivotY = sprite.image.height;
-			sprite.image.pivotX = 0;
+			IsoSprite(sprite).setTexture(offset, texture);
 		}
 		public function get isLoaded():Boolean {
 			return texture !== null;

@@ -10,7 +10,7 @@
 package  
 {
 	import fr.kouma.starling.utils.Stats;
-	import isohill.GridIsoSprites;
+	import isohill.GridDisplay;
 	import isohill.IsoHill;
 	import isohill.plugins.IsoCamera;
 	import isohill.plugins.XRayLayers;
@@ -63,7 +63,7 @@ package
 			for (var i:int = 0; i < tmx.layersArray.length; i++) {
 				var layer:TMXLayer = tmx.layersArray[i];
 				var layerName:String = layer.name;
-				var grid:GridIsoSprites = tmxPlugin.makeEmptyGridOfSize(i, layerName);
+				var grid:GridDisplay = tmxPlugin.makeEmptyGridOfSize(i, layerName);
 				if (layerName.indexOf("earth")!=-1) grid.flatten(); // disable sorting and flatten the ground as it is not dynamic (speed improvement)
 				isoHill.addLayer(i, layerName, grid); // add the layer to the engine
 			}

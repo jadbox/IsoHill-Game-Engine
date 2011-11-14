@@ -15,9 +15,11 @@ package isohill.loaders
 	import flash.display.MovieClip;
 	import flash.events.Event;
 	import flash.geom.Matrix;
+	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import isohill.IsoDisplay;
 	import isohill.AssetManager;
-	import isohill.components.FrameComponent;
+	import isohill.IsoMovieClip;
 	import isohill.IsoSprite;
 	import isohill.Point3;
 	import starling.core.Starling;
@@ -36,21 +38,21 @@ package isohill.loaders
 		private var _id:String;
 		private var fps:int;
 		private var textures:Vector.<Texture>;
+		private var offset:Point;
 		public function MovieClipAssembler(items:MovieClipAssemblerItem, fps:int=12) 
 		{
 			this.items = items;
 			_id = items.id;
 			this.fps = fps;
+			offset = new Point(items.x, items.y);
 		}
-		public function getImage():Image {
+		public function getDisplay():starling.display.DisplayObject {
 			if(proxyTexture==null) proxyTexture = new <Texture>[Texture.empty(25,25, 0xffff0000)];
 			return new starling.display.MovieClip(proxyTexture);
 		}
 		/* INTERFACE isohill.loaders.ITextureLoader */
-		public function setTexture(sprite:IsoSprite):void {
-			AssetManager._setupMovieClip(sprite, textures);
-			sprite.image.pivotY = sprite.image.height;
-			sprite.image.pivotX = 0;
+		public function setTexture(sprite:IsoDisplay):void {
+			IsoMovieClip(sprite).setTexture(offset, textures);	
 		}
 		public function get isLoaded():Boolean {
 			return textures !== null;

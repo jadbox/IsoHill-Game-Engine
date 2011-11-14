@@ -17,16 +17,16 @@ package isohill.loaders
 	 */
 	public class MovieClipAssemblerItem
 	{
-		public var x:Number;
-		public var y:Number;
+		public var x:Number=0;
+		public var y:Number=0;
 		public var scaleX:Number=1;
 		public var scaleY:Number=1;
 		public var rotation:Number;
 		public var file:String;
 		public var linkage:String;
 		public var children:Vector.<MovieClipAssemblerItem>;
+		public var mc:MovieClip;
 		
-		private var mc:MovieClip;
 		private var onLoaderCallback:Function;
 		private var parseChild:int = 0;
 		
@@ -38,6 +38,7 @@ package isohill.loaders
 			if(o.scaleY) item.scaleY = Number(o.scaleY);
 			if (o.rotation) item.rotation = o.rotation;
 			if (o.file) item.file = String(o.file);
+			if (o.mc && o.mc is MovieClip) item.mc = o.mc;
 			if (o.linkage) item.linkage = String(o.linkage);
 			if (o.children)
 			for each(var child:Object in o.children) {
@@ -59,7 +60,8 @@ package isohill.loaders
 		public function load(onLoaderCallback:Function):void 
 		{
 			this.onLoaderCallback = onLoaderCallback;
-			ImgLoader.instance.getMovieClip(file, linkage, onLoad);
+			if (this.mc) onLoad(mc);
+			else ImgLoader.instance.getMovieClip(file, linkage, onLoad);
 		}
 		private function onLoad(mc:MovieClip):void {
 			mc.x = x;

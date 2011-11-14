@@ -11,8 +11,10 @@ package isohill.components
 {
 	import flash.geom.Matrix;
 	import flash.geom.Point;
+	import isohill.IsoDisplay;
 	import isohill.IsoSprite;
 	import isohill.Point3;
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	/**
 	 * Converts an entity's position to isometric and updates it's raw image position
@@ -35,15 +37,15 @@ package isohill.components
 			projectionInverse = (projection.clone());
 			projectionInverse.invert();
 		}
-		public function onSetup(sprite:IsoSprite):void {
+		public function onSetup(sprite:IsoDisplay):void {
 			
 		}
 		public function onRemove():void {
 			
 		}
-		public function advanceTime(time:Number, sprite:IsoSprite):void {
+		public function advanceTime(time:Number, sprite:IsoDisplay):void {
 			var isoPt:Point = sprite.pt;
-			var image:Image = sprite.image;
+			var image:DisplayObject = sprite.display;
 			pt = projection.transformPoint(isoPt);
 			image.x = pt.x;
 			image.y = pt.y;
@@ -53,9 +55,6 @@ package isohill.components
 		}
 		public function screenToIso(pt:Point):Point {
 			return projectionInverse.transformPoint(pt);
-		}
-		public function requiresImage():Boolean { 
-			return true;
 		}
 	}
 

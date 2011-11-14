@@ -18,20 +18,20 @@ package isohill
 	 * Unbounded two directional vector (using single vector math)
 	 * @author Jonathan Dunlap
 	 */
-	public class GridIsoSprites implements IPlugin
+	public class GridDisplay implements IPlugin
 	{
 		public var name:String;
-		private var data:Vector.<Vector.<IsoSprite>>;
-		private var flatData:Vector.<IsoSprite>;
+		private var data:Vector.<Vector.<IsoDisplay>>;
+		private var flatData:Vector.<IsoDisplay>;
 		private var w:int = 0;
 		private var h:int = 0;
 		private var tileWidth:int = 1;
 		private var tileHeight:int = 1;
 		public var sort:Boolean = true;
 		public var container:Sprite;
-		public var spriteHash:Dictionary = new Dictionary(true); // sprite name -> IsoSprite
+		public var spriteHash:Dictionary = new Dictionary(true); // sprite name -> IsoDisplay
 		
-		public function GridIsoSprites(name:String, w:int, h:int, cellwidth:int, cellheight:int) 
+		public function GridDisplay(name:String, w:int, h:int, cellwidth:int, cellheight:int) 
 		{
 			this.name = name;
 			this.w = w;
@@ -39,8 +39,8 @@ package isohill
 			this.tileWidth = cellwidth;
 			this.tileHeight = cellheight;
 			container = new Sprite();
-			data = new Vector.<Vector.<IsoSprite>>(w * h + 1, true);
-			flatData = new <IsoSprite>[];
+			data = new Vector.<Vector.<IsoDisplay>>(w * h + 1, true);
+			flatData = new <IsoDisplay>[];
 		}
 		public function flatten():void {
 			sort = false;
@@ -53,8 +53,8 @@ package isohill
 		public function isFlattened():Boolean {
 			return container.isFlattened;
 		}
-		// get the collection of IsoSprites in cell location
-		public function getCell(x:int, y:int):Vector.<IsoSprite> {
+		// get the collection of IsoDisplays in cell location
+		public function getCell(x:int, y:int):Vector.<IsoDisplay> {
 			if (x > w) x = w-1; // inlined bound checking for speed
 			else if (x < 1) x = 1;
 			if (y > h) y = h - 1;
@@ -72,7 +72,7 @@ package isohill
 		public function fromLayerPt(x:Number, y:Number, z:Number=1):Point3 {
 			return new Point3(x / (tileHeight - 1)+1, y / (tileHeight - 1)+1, z);
 		}
-		private function updateLocation(val:IsoSprite):void {
+		private function updateLocation(val:IsoDisplay):void {
 			var x:int = Math.floor(val.pt.x / tileHeight);
 			var y:int = Math.floor(val.pt.y / tileHeight);
 			if (x >= w) x = w-1; // inlined bound checking for speed
@@ -85,14 +85,14 @@ package isohill
 			//trace(x, y);
 			removeFromGridData(val);
 			
-			var collection:Vector.<IsoSprite> = data[index];
-			if (collection == null) collection = data[index] = new Vector.<IsoSprite>();
+			var collection:Vector.<IsoDisplay> = data[index];
+			if (collection == null) collection = data[index] = new Vector.<IsoDisplay>();
 			collection.push(val);
 			val.layerIndex = index;
 		}
-		private function removeFromGridData(val:IsoSprite):void {
+		private function removeFromGridData(val:IsoDisplay):void {
 			if (val.layerIndex == -1) return;
-			var arr:Vector.<IsoSprite> = data[val.layerIndex];
+			var arr:Vector.<IsoDisplay> = data[val.layerIndex];
 			if (arr == null) { val.layerIndex = -1; return;}
 			//throw new Error("invalid layer index " + val.layerIndex);
 			var index:int = arr.indexOf(val);
@@ -100,7 +100,7 @@ package isohill
 			arr.splice(index, 1);
 			val.layerIndex = -1;
 		}
-		public function push(val:IsoSprite):IsoSprite {
+		public function push(val:IsoDisplay):IsoDisplay {
 			if (val == null) return val;
 			if (val.name == "" || val.name == null) {
 				throw new Error("adding sprite with no name");
@@ -109,12 +109,12 @@ package isohill
 			updateLocation(val);
 			spriteHash[val.name] = val;
 			val.layer = this;
-			addStarlingChild(val.image);
+			addStarlingChild(val.display);
 			return val;
 		}
-		public function remove(val:IsoSprite):IsoSprite {
+		public function remove(val:IsoDisplay):IsoDisplay {
 			if (val.layerIndex == -1 || val.layer==null) return val;
-			container.removeChild(val.image);
+			container.removeChild(val.display);
 			
 			removeFromGridData(val);
 			val.layer = null;
@@ -124,11 +124,11 @@ package isohill
 		public function get numChildren():int {
 			return container.numChildren;
 		}
-		public function setCell(val:Vector.<IsoSprite>):Vector.<IsoSprite> {
-			for each (var sprite:IsoSprite in val) push(sprite);
+		public function setCell(val:Vector.<IsoDisplay>):Vector.<IsoDisplay> {
+			for each (var sprite:IsoDisplay in val) push(sprite);
 			return val;
 		}
-		private function addStarlingChild(image:Image):void {
+		private function addStarlingChild(image:DisplayObject):void {
 			var wasFlat:Boolean = container.isFlattened;
 			if(wasFlat) container.unflatten();
 			container.addChild(image);
@@ -138,9 +138,9 @@ package isohill
 			}
 		}
 		public function advanceTime(time:Number, engine:IsoHill):void {
-			var first:IsoSprite;
-			for each(var layer:Vector.<IsoSprite> in data) {
-				if (layer != null) for each(var sprite:IsoSprite in layer) {
+			var first:IsoDisplay;
+			for each(var layer:Vector.<IsoDisplay> in data) {
+				if (layer != null) for each(var sprite:IsoDisplay in layer) {
 					if (sprite == null) continue;
 					updateLocation(sprite);
 					sprite.advanceTime(time);
@@ -161,9 +161,9 @@ package isohill
 		}
 		// Compare two entities and return true if they need to be depth swapped
 		/*
-		private function sorter(f:IsoSprite, s:IsoSprite):Boolean {
-			var key:Number = f.image.y + f.image.height; //f.pt.x + f.pt.y + f.image.height;
-			var key2:Number = s.image.y + s.image.height; //s.pt.x + s.pt.y + s.image.height-.1;
+		private function sorter(f:IsoDisplay, s:IsoDisplay):Boolean {
+			var key:Number = f.display.y + f.display.height; //f.pt.x + f.pt.y + f.display.height;
+			var key2:Number = s.display.y + s.display.height; //s.pt.x + s.pt.y + s.display.height-.1;
 			return key > key2;
 		}*/
 		private function sorterDisplay(f:DisplayObject, s:DisplayObject):Boolean {

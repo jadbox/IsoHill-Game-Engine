@@ -11,7 +11,7 @@ package isohill.plugins
 {
 	import flash.geom.Point;
 	import isohill.components.IsoProjection;
-	import isohill.GridIsoSprites;
+	import isohill.GridDisplay;
 	import isohill.IsoHill;
 	import isohill.Point3;
 	/**

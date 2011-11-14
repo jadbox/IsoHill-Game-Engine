@@ -35,20 +35,20 @@ package isohill
 	{
 		public static var instance:IsoHill; // global handler for the engine, must be instanced first
 		
-		public var layers:Vector.<GridIsoSprites>; // it's a plugin too, but it's special and gets its own property
-		public var layersHash:Dictionary; // indexed my layer name (key:*, value:GridIsoSprites)
+		public var layers:Vector.<GridDisplay>; // it's a plugin too, but it's special and gets its own property
+		public var layersHash:Dictionary; // indexed my layer name (key:*, value:GridDisplay)
 		private var plugins:Vector.<IPlugin>;
 		public var juggler:Juggler;
 			
 		public function IsoHill() 
 		{
-			layers = new <GridIsoSprites>[];
+			layers = new <GridDisplay>[];
 			plugins = new <IPlugin>[];
 			layersHash = new Dictionary();
 			juggler = new Juggler();
 			instance = this;
 		}
-		public function addLayer(index:int, name:String, layer:GridIsoSprites):void {
+		public function addLayer(index:int, name:String, layer:GridDisplay):void {
 			for (var i:int = 0; i <= index; i++) {
 				if (i == index) { layers[i] = layer; break; }
 				else if (i == layers.length) layers.push(null);
@@ -56,18 +56,18 @@ package isohill
 			layersHash[name] = layer;
 			if(layer!=null) addChild(layer.container);
 		}
-		public function getLayerByIndex(index:int):GridIsoSprites {
+		public function getLayerByIndex(index:int):GridDisplay {
 			return layers[index];
 		}
-		public function getLayerByName(name:String):GridIsoSprites {
+		public function getLayerByName(name:String):GridDisplay {
 			return layersHash[name];
 		}
 		public function getSpriteByLayerName(layerName:String, spriteName:String):IsoSprite {
-			var layer:GridIsoSprites = getLayerByName(layerName);
+			var layer:GridDisplay = getLayerByName(layerName);
 			return IsoSprite(layer.spriteHash[spriteName]);
 		}
 		public function getSpriteByLayerIndex(layerIndex:int, spriteName:String):IsoSprite {
-			var layer:GridIsoSprites = layers[layerIndex];
+			var layer:GridDisplay = layers[layerIndex];
 			return IsoSprite(layer.spriteHash[spriteName]);
 		}
 		public function addPlugin(plugin:IPlugin):void {
@@ -89,7 +89,7 @@ package isohill
 			// update plugins
 			for each(var plugin:IPlugin in plugins) plugin.advanceTime(time, this);
 			// update sprites
-			for each(var layer:GridIsoSprites in layers) {
+			for each(var layer:GridDisplay in layers) {
 				if(layer!=null) layer.advanceTime(time, this);
 			}
 			x += .48;

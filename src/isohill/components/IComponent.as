@@ -9,6 +9,7 @@
 */
 package isohill.components 
 {
+	import isohill.IsoDisplay;
 	import isohill.IsoSprite;
 	
 	/**
@@ -16,10 +17,9 @@ package isohill.components
 	 */
 	public interface IComponent 
 	{
-		function onSetup(sprite:IsoSprite):void;
+		function onSetup(sprite:IsoDisplay):void;
 		function onRemove():void;
-		function advanceTime(time:Number, sprite:IsoSprite):void;
-		function requiresImage():Boolean;
+		function advanceTime(time:Number, sprite:IsoDisplay):void;
 	}
 	
 }
