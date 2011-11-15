@@ -42,6 +42,16 @@ package isohill
 			data = new Vector.<Vector.<IsoDisplay>>(w * h + 1, true);
 			flatData = new <IsoDisplay>[];
 		}
+		public function toString():String {
+			var result:String = "";
+			for (var y:int = 0; y < h; y++) {
+				for (var x:int = 0; x < w; x++) {
+					result += getCell(x, y).toString();
+				}
+				result += "\n";
+			}	
+			return result; 
+		}
 		public function flatten():void {
 			sort = false;
 			container.flatten();

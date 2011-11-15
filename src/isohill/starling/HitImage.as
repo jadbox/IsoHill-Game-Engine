@@ -7,32 +7,34 @@
 * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 */
-package isohill.components 
+package isohill.starling 
 {
-	import flash.display.Bitmap;
-	import flash.display.BitmapData;
-	import isohill.IsoDisplay;
+	import flash.geom.Point;
 	import isohill.GridBool;
-	import isohill.IsoSprite;
+	import starling.display.DisplayObject;
+	import starling.textures.Texture;
+	
 	/**
-	 * This component wraps the Starling Touch events but takes into account transparency
+	 * Image that is hitTest transparent aware
 	 * @author Jonathan Dunlap
 	 */
-	public class TouchComponent implements IComponent 
+	public class HitImage extends starling.display.Image 
 	{
-		public var transparentArea:GridBool;
-		public function TouchComponent(bmd:BitmapData) 
+		private var _hitMap:GridBool;
+		public function HitImage(texture:Texture) 
 		{
-			
+			super(texture);
 		}
-		public static function fromBitmap(b:Bitmap):TouchComponent {
-			return new TouchComponent(b.bitmapData);
+		public function set hitMap(val:GridBool):void {
+			_hitMap = val;
 		}
-		/* INTERFACE isohill.components.IComponent */
-		
-		public function advanceTime(time:Number, sprite:IsoDisplay):void 
+		override public function hitTest(localPoint:Point, forTouch:Boolean = false):DisplayObject 
 		{
-			
+			var hitCase:DisplayObject = super.hitTest(localPoint, forTouch);
+			if (hitCase==null || _hitMap==null) return hitCase;
+			var x:int = Math.round(localPoint.x);
+			var y:int = Math.round(localPoint.y);
+			return _hitMap.getCell(x, y)==true?hitCase:null;
 		}
 	}
 

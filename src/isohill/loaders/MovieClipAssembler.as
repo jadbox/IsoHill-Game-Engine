@@ -11,21 +11,22 @@ package isohill.loaders
 {
 	import com.emibap.textureAtlas.DynamicAtlas;
 	import flash.display.BitmapData;
-	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
 	import flash.events.Event;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import isohill.GridBool;
 	import isohill.IsoDisplay;
 	import isohill.AssetManager;
 	import isohill.IsoMovieClip;
 	import isohill.IsoSprite;
 	import isohill.Point3;
 	import starling.core.Starling;
-	import starling.display.Image;
+	import isohill.starling.HitMovieClip;
 	import starling.textures.Texture;
 	import starling.textures.TextureAtlas;
+	import starling.display.DisplayObject;
 	/**
 	 * Takes a configuration MovieClipAssemblerItem to load and assemble a texture
 	 * @author Jonathan Dunlap
@@ -34,25 +35,27 @@ package isohill.loaders
 	{
 		private var items:MovieClipAssemblerItem;
 		private static var proxyTexture:Vector.<Texture>;
-		
+		private var hitMap:Vector.<GridBool>;
 		private var _id:String;
 		private var fps:int;
 		private var textures:Vector.<Texture>;
 		private var offset:Point;
-		public function MovieClipAssembler(items:MovieClipAssemblerItem, fps:int=12) 
+		public function MovieClipAssembler(items:MovieClipAssemblerItem, fps:int=12, hitMapTest:Boolean=true) 
 		{
 			this.items = items;
 			_id = items.id;
 			this.fps = fps;
 			offset = new Point(items.x, items.y);
+			if(hitMapTest) hitMap = new Vector.<GridBool>();
 		}
-		public function getDisplay():starling.display.DisplayObject {
+		public function getDisplay():DisplayObject {
 			if(proxyTexture==null) proxyTexture = new <Texture>[Texture.empty(25,25, 0xffff0000)];
-			return new starling.display.MovieClip(proxyTexture);
+			return new HitMovieClip(proxyTexture);
 		}
 		/* INTERFACE isohill.loaders.ITextureLoader */
 		public function setTexture(sprite:IsoDisplay):void {
 			IsoMovieClip(sprite).setTexture(offset, textures);	
+			IsoMovieClip(sprite).setHitmap(hitMap);	
 		}
 		public function get isLoaded():Boolean {
 			return textures !== null;
@@ -64,10 +67,10 @@ package isohill.loaders
 		private function onLoad(mc:MovieClip):void {
 			if (mc == null) throw new Error("failed to load MovieClipAssemblerItem");
 			//var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc);
-			textures = getTextures(mc);
+			textures = getTextures(mc, hitMap);
 		}
 		// Converts a MovieClip to a series of Textures in a Vector
-		public static function getTextures(mc:MovieClip):Vector.<Texture> {
+		public static function getTextures(mc:MovieClip, hitMap:Vector.<GridBool>=null):Vector.<Texture> {
 			var target:MovieClip = mc;
 			var textures:Vector.<Texture> = new Vector.<Texture>();
 			// retarget if the first child is the container with all the frames
@@ -83,13 +86,17 @@ package isohill.loaders
 				matrix.ty = -rect.y;
 				bmd.draw(mc, matrix, null, null, null, true);
 				textures.push(Texture.fromBitmapData(bmd));
+				if (hitMap != null) {
+					var hitMapItem:GridBool = GridBool.fromBitMapDataAlpha(bmd);
+					hitMap.push(hitMapItem);
+				}
 			}
 			return textures;
 		}
 		private static function findLongestFrame(mc:MovieClip):int {
 			var current:int = mc.totalFrames;
 			for (var i:int = 0; i < mc.numChildren; i++) {
-				var child:DisplayObject = mc.getChildAt(i);
+				var child:flash.display.DisplayObject = mc.getChildAt(i);
 				if (child is MovieClip) current = Math.max(current, findLongestFrame(MovieClip(child)));
 			}
 			return current;
@@ -110,14 +117,14 @@ package isohill.loaders
 		private static function nextFrame(mc:MovieClip):void {
 			mc.nextFrame();
 			for (var i:int = 0; i < mc.numChildren; i++) {
-				var child:DisplayObject = mc.getChildAt(i);
+				var child:flash.display.DisplayObject = mc.getChildAt(i);
 				if (child is MovieClip) nextFrame(MovieClip(child));
 			}
 		}
 		private static function resetFrame(mc:MovieClip):void {
 			mc.gotoAndStop(1);
 			for (var i:int = 0; i < mc.numChildren; i++) {
-				var child:DisplayObject = mc.getChildAt(i);
+				var child:flash.display.DisplayObject = mc.getChildAt(i);
 				if (child is MovieClip) resetFrame(MovieClip(child));
 			}
 		}

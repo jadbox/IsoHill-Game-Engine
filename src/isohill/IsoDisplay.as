@@ -28,7 +28,7 @@ package isohill
 	 * 
 	 * @author Jonathan Dunlap
 	 */
-	public class IsoDisplay extends EventDispatcher
+	public class IsoDisplay
 	{
 		public var name:String; // Identifier
 		public var type:String; // type label

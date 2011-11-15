@@ -28,6 +28,16 @@ package isohill
 			height = Math.max(height, 1); // same here
 			data = new Vector.<int>(width * height, true); // make a prefined fixed sized array for performance
 		}
+		public function toString():String {
+			var result:String = "";
+			for (var y:int = 0; y < height; y++) {
+				for (var x:int = 0; x < width; x++) {
+					result += getCell(x, y).toString();
+				}
+				result += "\n";
+			}	
+			return result; 
+		}
 		public function getCell(x:int, y:int):int {
 			var index:int = y * width + x; // get the index of the single array for the grid position
 			return data[index];

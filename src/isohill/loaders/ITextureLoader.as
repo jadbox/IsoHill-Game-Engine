@@ -25,6 +25,7 @@ package isohill.loaders
 		function get id():String;
 		function getDisplay():DisplayObject;
 		function load():void;
+	//	function transparencyCheck(x:Number, y:Number):Boolean;
 	}
 	
 }

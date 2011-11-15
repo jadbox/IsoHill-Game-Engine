@@ -16,7 +16,7 @@ package isohill
 	import isohill.State;
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
-	import starling.display.MovieClip;
+	import isohill.starling.HitMovieClip;
 	import starling.textures.Texture;
 	
 	/**
@@ -26,7 +26,7 @@ package isohill
 	public class IsoMovieClip extends IsoDisplay
 	{
 		private var _currentFrame:int = -1; // flag for not set
-		private var _display:MovieClip;
+		private var _display:HitMovieClip;
 		public function IsoMovieClip(id:String, name:String, pt:Point3=null, state:State=null) 
 		{
 			super(id, name, pt, state);
@@ -38,12 +38,15 @@ package isohill
 		// Internal use for setting the base Image or MovieClip
 		public override function set display(val:DisplayObject):void {
 			if (val == null) throw new Error("img is null");
-			if (MovieClip(val) == false) throw new Error("Starling DisplayObject is not a MovieClip");
+			if (!(val is HitMovieClip)) throw new Error("Starling DisplayObject is not a MovieClip");
 			if (_display != null && val != display) {
 				if (_display.parent) _display.parent.removeChild(_display);
 			}
 
-			_display = MovieClip(val);
+			_display = HitMovieClip(val);
+		}
+		public function setHitmap(hitMap:Vector.<GridBool>):void {
+			 _display.hitMap = hitMap;
 		}
 		public function setTexture(offset:Point, textures:Vector.<Texture>, durations:Vector.<Number> = null, snds:Vector.<Sound> = null):void {
 			if (textures == null) throw new Error("Textures were null");
@@ -54,6 +57,8 @@ package isohill
 				_display.addFrame(textures[i], snds?snds[i]:null, durations!=null?durations[i]:-1);
 			}
 			_display.currentFrame = _display.currentFrame; // Starling Texture update hack
+			if (!offset.y) offset.y = 0;
+			if (!offset.x) offset.x = 0;
 			_display.pivotY = _display.height + offset.y;
 			_display.pivotX = 0 + offset.x;
 		}

@@ -12,6 +12,7 @@ package isohill.loaders
 	import flash.display.BitmapData;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import isohill.GridBool;
 	import isohill.IsoDisplay;
 	import isohill.AssetManager;
 	import isohill.IsoMovieClip;
@@ -19,7 +20,7 @@ package isohill.loaders
 	import isohill.loaders.ImgLoader;
 	import starling.display.DisplayObject;
 	import starling.display.Image;
-	import starling.display.MovieClip;
+	import isohill.starling.HitMovieClip;
 	import starling.textures.Texture;
 	/**
 	 * Loads one texture for multiple frames
@@ -31,33 +32,41 @@ package isohill.loaders
 		
 		private var frames:Vector.<Rectangle>;
 		private var textures:Vector.<Texture>;
+		private var hitMap:Vector.<GridBool>;
 		private var offset:Point;
 		private static var proxyTexture:Vector.<Texture>;
 
-		public function TexturesLoader(url:String, frames:Vector.<Rectangle>, offset:Point=null) 
+		public function TexturesLoader(url:String, frames:Vector.<Rectangle>, offset:Point=null, hitMapTest:Boolean=true) 
 		{
 			this.url = url;
 			this.frames = frames;
 			this.offset = offset?offset:new Point();
+			if(hitMapTest) hitMap = new <GridBool>[];
 		}
 		public function getDisplay():DisplayObject {
 			if(proxyTexture==null) proxyTexture = new <Texture>[Texture.empty(22, 22, 0xff990000)];
-			return new starling.display.MovieClip(proxyTexture);
+			return new HitMovieClip(proxyTexture);
 		}
 		public function load():void {
 			ImgLoader.instance.getBitmapData(url, onLoad);
 		}
 		private function onLoad(bd:BitmapData):void {
+			if (textures) return;
 			var bigTexture:Texture = Texture.fromBitmapData(bd);
 			var i:int = 0;
 			textures = new <Texture>[];
+			
 			for each (var frame:Rectangle in frames) {
 				textures.push( Texture.fromTexture(bigTexture, frame) );
+				if (hitMap != null) hitMap.push(GridBool.fromBitMapDataAlpha(bd, frame));
+				i++;
 			}
+			
 		}
 		public function get id():String { return url; }
 		public function setTexture(sprite:IsoDisplay):void {
 			IsoMovieClip(sprite).setTexture(offset, textures);
+			IsoMovieClip(sprite).setHitmap(hitMap);
 		}
 		public function get isLoaded():Boolean {
 			return textures !== null;

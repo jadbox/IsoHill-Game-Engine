@@ -62,13 +62,15 @@ package isohill
 		public function getLayerByName(name:String):GridDisplay {
 			return layersHash[name];
 		}
-		public function getSpriteByLayerName(layerName:String, spriteName:String):IsoSprite {
+		public function getSpriteByLayerName(layerName:String, spriteName:String):IsoDisplay {
 			var layer:GridDisplay = getLayerByName(layerName);
-			return IsoSprite(layer.spriteHash[spriteName]);
+			var result:IsoDisplay = IsoDisplay(layer.spriteHash[spriteName]);
+			if (result == null) throw new Error("No sprite of name "+spriteName+" on layer: " + layerName);
+			return result;
 		}
-		public function getSpriteByLayerIndex(layerIndex:int, spriteName:String):IsoSprite {
+		public function getSpriteByLayerIndex(layerIndex:int, spriteName:String):IsoDisplay {
 			var layer:GridDisplay = layers[layerIndex];
-			return IsoSprite(layer.spriteHash[spriteName]);
+			return IsoDisplay(layer.spriteHash[spriteName]);
 		}
 		public function addPlugin(plugin:IPlugin):void {
 			plugins.push(plugin);

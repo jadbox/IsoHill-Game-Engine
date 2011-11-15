@@ -21,16 +21,16 @@ package isohill
 	import starling.display.MovieClip;
 	import starling.events.Event;
 	import starling.textures.Texture;
-	import starling.display.Image;
+	import isohill.starling.HitImage;
 	import flash.utils.getTimer;
 	/**
-	 * The primitive entity for IsoHill isometric sprites. It's a lightweight class with enough core functionality to fit most simple games.
+	 * This IsoHill class acts as a simple entity for a Starling display with one non-animating Texture
 	 * 
 	 * @author Jonathan Dunlap
 	 */
 	public class IsoSprite extends IsoDisplay
 	{	
-		private var _display:Image;
+		private var _display:HitImage;
 		// Must be given a texture or set with setTexture before use
 		public function IsoSprite(assetID:String, name:String, pt:Point3=null, state:State=null) 
 		{
@@ -42,14 +42,19 @@ package isohill
 		// Internal use for setting the base Image or MovieClip
 		public override function set display(val:DisplayObject):void {
 			if (val == null) throw new Error("img is null");
-			if (!(val is Image)) throw new Error("Invalid Starling display object.");
+			if (!(val is HitImage)) throw new Error("Starling DisplayObject is not an Image.");
 			if (_display != null && val != _display) {
 				if (_display.parent) _display.parent.removeChild(_display);
 			}
-			_display = Image(val);
+			_display = HitImage(val);
+		}
+		public function setHitmap(hitMap:GridBool):void {
+			 _display.hitMap = hitMap;
 		}
 		public function setTexture(offset:Point, val:Texture):void {
 			_display.texture = val;
+			if (!offset.y) offset.y = 0;
+			if (!offset.x) offset.x = 0;
 			_display.pivotY = _display.height + offset.y;
 			_display.pivotX = 0 + offset.x;
 		}
