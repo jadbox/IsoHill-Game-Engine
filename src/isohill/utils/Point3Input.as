@@ -70,8 +70,8 @@ package isohill.utils
 		}
 		override public function update(time:Number):void {
 			var fasterPanWithZoom:Number = Math.max(z, 1);
-			x += velocity.x * fasterPanWithZoom;
-			y += velocity.y * fasterPanWithZoom;
+			x += velocity.x;
+			y += velocity.y;
 			z += velocity.z;
 		}
 	}

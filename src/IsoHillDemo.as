@@ -54,7 +54,6 @@ package
 			addChild(isoHill); // add the engine to starling
 			addPlugins(isoHill);
 			isoHill.start(); // start all the runtime logic
-			trace("setup"); 
 			addChild(new Stats()); // Mrdoob's performance monitor
 		}
 		private function addPlugins(isoHill:IsoHill):void {
@@ -67,10 +66,9 @@ package
 				if (layerName.indexOf("earth")!=-1) grid.flatten(); // disable sorting and flatten the ground as it is not dynamic (speed improvement)
 				isoHill.addLayer(i, layerName, grid); // add the layer to the engine
 			}
-			tmxPlugin.init();
 			//isoHill.addPlugin(new XRayLayers());
 			isoHill.addPlugin(tmxPlugin); // adding the plugin
-			isoHill.addPlugin(new IsoCamera(new Point3Input(stage, 0, 600)));
+			isoHill.addPlugin(new IsoCamera(new Point3Input(stage, 0, 450)));
 		}
 	}
 

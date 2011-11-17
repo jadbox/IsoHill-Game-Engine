@@ -36,7 +36,7 @@ package isohill.tmx
 			this.tmx = tmx;
 			linkedLayer = new <GridDisplay>[];
 		}
-		public function init():void {
+		public function onSetup(engine:IsoHill):void {
 			loadTiles();
 			for (var x:int = 0; x < tmx.width; x++) {
 				for (var y:int = 0; y < tmx.height; y++) {
@@ -45,8 +45,11 @@ package isohill.tmx
 			}
 			trace("layers created");
 		}
+		public function onRemove():void {
+			
+		}
 		private var steps:int=0; // TODO: add async asset tmx sprite creation for when its texture is loaded
-		public function advanceTime(time:Number, engine:IsoHill):void {
+		public function advanceTime(time:Number):void {
 
 		}
 		private function loadTiles():void {

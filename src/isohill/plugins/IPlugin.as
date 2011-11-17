@@ -17,7 +17,12 @@ package isohill.plugins
 	 */
 	public interface IPlugin 
 	{
-		function advanceTime(time:Number, engine:IsoHill):void;
+		// Invoked with the plugin is added to the engine
+		function onSetup(engine:IsoHill):void;
+		// Invoked when the plugin is removed from the engine
+		function onRemove():void;
+		// Called by the engine on each frame lapse
+		function advanceTime(time:Number):void;
 	}
 	
 }

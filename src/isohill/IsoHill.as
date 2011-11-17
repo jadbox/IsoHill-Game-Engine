@@ -38,15 +38,43 @@ package isohill
 		public var layers:Vector.<GridDisplay>; // it's a plugin too, but it's special and gets its own property
 		public var layersHash:Dictionary; // indexed my layer name (key:*, value:GridDisplay)
 		private var plugins:Vector.<IPlugin>;
-		public var juggler:Juggler;
-			
+		private var _juggler:Juggler;
+		private var container:Sprite = new Sprite();
+		
 		public function IsoHill() 
 		{
 			layers = new <GridDisplay>[];
 			plugins = new <IPlugin>[];
 			layersHash = new Dictionary();
-			juggler = new Juggler();
+			_juggler = new Juggler();
 			instance = this;
+			addChild(container);
+		}
+		public function get juggler():Juggler {
+			return _juggler;
+		}
+		public function set currentZoom(val:Number):void {
+			scaleX = scaleY = val;
+		}
+		public function get currentZoom():Number {
+			return scaleX;
+		}
+		public function get position():Point {
+			return new Point(container.x, container.y);
+		}
+		public function set position(val:Point):void {
+			container.x = val.x;
+			container.y = val.y;
+		}
+		public function move(x:Number, y:Number):void {
+			container.x = x;
+			container.y = y;
+		}
+		public override function localToGlobal(pt:Point):Point {
+			return container.localToGlobal(pt);
+		}
+		public override function globalToLocal(pt:Point):Point {
+			return container.globalToLocal(pt);
 		}
 		public function addLayer(index:int, name:String, layer:GridDisplay):void {
 			for (var i:int = 0; i <= index; i++) {
@@ -54,7 +82,21 @@ package isohill
 				else if (i == layers.length) layers.push(null);
 			}
 			layersHash[name] = layer;
-			if(layer!=null) addChild(layer.container);
+			if(layer!=null) container.addChild(layer.display);
+		}
+		public function removeLayer(layer:GridDisplay):void {
+			var index:int = layers.indexOf(layer);
+			layers.splice(index, 1);
+			delete layersHash[layer.name];
+			container.removeChild(layer.display);
+		}
+		public function removeLayerByName(name:String):void {
+			var layer:GridDisplay = layersHash[name];
+			removeLayer(layer);
+		}
+		public function removeLayerByIndex(index:int):void {
+			var layer:GridDisplay = layers[index];
+			removeLayer(layer);
 		}
 		public function getLayerByIndex(index:int):GridDisplay {
 			return layers[index];
@@ -74,10 +116,12 @@ package isohill
 		}
 		public function addPlugin(plugin:IPlugin):void {
 			plugins.push(plugin);
+			plugin.onSetup(this);
 		}
 		public function removePlugin(plugin:IPlugin):void {
 			var index:int = plugins.indexOf(plugin);
 			if (index != -1) plugins.splice(index, 1);
+			plugin.onRemove();
 		}
 		public function start():void {
 			Starling.juggler.remove(this);
@@ -89,12 +133,14 @@ package isohill
 		public function advanceTime(time:Number):void {
 			juggler.advanceTime(time);
 			// update plugins
-			for each(var plugin:IPlugin in plugins) plugin.advanceTime(time, this);
+			for each(var plugin:IPlugin in plugins) plugin.advanceTime(time);
 			// update sprites
 			for each(var layer:GridDisplay in layers) {
-				if(layer!=null) layer.advanceTime(time, this);
+				if (layer != null)  {
+					layer.advanceTime(time, this);
+				}
 			}
-			x += .48;
+
 		}
 		// Tell the starling juggler that the engine never "completes"
         public function get isComplete():Boolean { return false; }

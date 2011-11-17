@@ -18,7 +18,7 @@ package isohill
 	 * Unbounded two directional vector (using single vector math)
 	 * @author Jonathan Dunlap
 	 */
-	public class GridDisplay implements IPlugin
+	public class GridDisplay
 	{
 		public var name:String;
 		private var data:Vector.<Vector.<IsoDisplay>>;
@@ -28,7 +28,7 @@ package isohill
 		private var tileWidth:int = 1;
 		private var tileHeight:int = 1;
 		public var sort:Boolean = true;
-		public var container:Sprite;
+		public var display:Sprite;
 		public var spriteHash:Dictionary = new Dictionary(true); // sprite name -> IsoDisplay
 		
 		public function GridDisplay(name:String, w:int, h:int, cellwidth:int, cellheight:int) 
@@ -38,7 +38,7 @@ package isohill
 			this.h = h;
 			this.tileWidth = cellwidth;
 			this.tileHeight = cellheight;
-			container = new Sprite();
+			display = new Sprite();
 			data = new Vector.<Vector.<IsoDisplay>>(w * h + 1, true);
 			flatData = new <IsoDisplay>[];
 		}
@@ -54,14 +54,20 @@ package isohill
 		}
 		public function flatten():void {
 			sort = false;
-			container.flatten();
+			display.flatten();
 		}
 		public function unflatten():void {
 			sort = true;
-			container.unflatten();
+			display.unflatten();
+		}
+		// force a sort and reflatten if the grid was set to flatten
+		public function forceUpdate():void {
+			if (display.isFlattened == false) return;
+			display.unflatten();
+			display.flatten();
 		}
 		public function isFlattened():Boolean {
-			return container.isFlattened;
+			return display.isFlattened;
 		}
 		// get the collection of IsoDisplays in cell location
 		public function getCell(x:int, y:int):Vector.<IsoDisplay> {
@@ -124,7 +130,7 @@ package isohill
 		}
 		public function remove(val:IsoDisplay):IsoDisplay {
 			if (val.layerIndex == -1 || val.layer==null) return val;
-			container.removeChild(val.display);
+			display.removeChild(val.display);
 			
 			removeFromGridData(val);
 			val.layer = null;
@@ -132,20 +138,17 @@ package isohill
 			return val;
 		}
 		public function get numChildren():int {
-			return container.numChildren;
+			return display.numChildren;
 		}
 		public function setCell(val:Vector.<IsoDisplay>):Vector.<IsoDisplay> {
 			for each (var sprite:IsoDisplay in val) push(sprite);
 			return val;
 		}
 		private function addStarlingChild(image:DisplayObject):void {
-			var wasFlat:Boolean = container.isFlattened;
-			if(wasFlat) container.unflatten();
-			container.addChild(image);
-			if (container.isFlattened) {
-				sortSystem();
-				container.flatten();
-			}
+			var wasFlat:Boolean = display.isFlattened;
+			if(wasFlat) display.unflatten();
+			display.addChild(image);
+			forceUpdate();
 		}
 		public function advanceTime(time:Number, engine:IsoHill):void {
 			var first:IsoDisplay;
@@ -161,11 +164,11 @@ package isohill
 		}
 		private function sortSystem():void {
 			var f:DisplayObject;
-			var numSprites:int = container.numChildren;
+			var numSprites:int = display.numChildren;
 			var c:DisplayObject;
 			for (var i:int = 0; i < numSprites; i++) {
-				c = container.getChildAt(i);
-				if (f != null && sorterDisplay(f, c)) container.swapChildren(f, c);
+				c = display.getChildAt(i);
+				if (f != null && sorterDisplay(f, c)) display.swapChildren(f, c);
 				f = c;
 			}
 		}

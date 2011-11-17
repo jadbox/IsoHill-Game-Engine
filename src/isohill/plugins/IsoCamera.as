@@ -9,6 +9,7 @@
 */
 package isohill.plugins 
 {
+	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import isohill.components.IsoProjection;
 	import isohill.GridDisplay;
@@ -21,27 +22,37 @@ package isohill.plugins
 	public class IsoCamera implements IPlugin
 	{
 		public static var instance:IsoCamera;
-		public var pt:Point3; // x y z[zoom]
+		public var position:Point3; // x y z[zoom]
 		private var engine:IsoHill;
-		public function IsoCamera(pt:Point3) 
+		
+		private static const ZOOM_IN_LIMIT:Number = 5;
+		private static const ZOOM_OUT_LIMIT:Number = .1;
+		public function IsoCamera(position:Point3) 
 		{
-			this.pt = pt;
+			this.position = position;
 			IsoCamera.instance = this;
 		}
-		public function advanceTime(time:Number, engine:IsoHill):void {
+		public function onSetup(engine:IsoHill):void {
 			this.engine = engine;
-			pt.update(time); // update the point if it's dynamic like Point3Mouse
-			engine.x = -pt.x + engine.stage.stageWidth >> 1;
-			engine.y = -pt.y + engine.stage.stageHeight >> 1;
-			engine.scaleX = engine.scaleY = pt.z > .015?pt.z:.016;
+			engine.x = (engine.stage.stageWidth * .5);
+			engine.y = (engine.stage.stageHeight * .5);
+		}
+		public function onRemove():void {
+			
+		}
+		public function advanceTime(time:Number):void {
+			position.update(time); // update the point if it's dynamic like Point3Mouse
+			
+			engine.move( -position.x , -position.y);
+			position.z = Math.min(ZOOM_IN_LIMIT, position.z);
+			position.z = Math.max(ZOOM_OUT_LIMIT, position.z);
+			engine.currentZoom = position.z;
 		}
 		public function screenToIso(pt:Point):Point {
 			if (!engine) return pt;
-			pt.x -= engine.x;
-			pt.y -= engine.y;
-			pt.x /= engine.scaleX;
-			pt.y /= engine.scaleX;
-			return IsoProjection.instance.screenToIso(pt);
+			
+			var pt2:Point = engine.globalToLocal(pt);
+			return IsoProjection.instance.screenToIso(pt2);
 		}
 	}
 
