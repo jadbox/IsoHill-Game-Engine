@@ -26,7 +26,7 @@ package isohill.projections
 		public static var TYPE_ISOMETRIC:String = "isometric";
 		public static var TYPE_ORTHOGONAL:String = "orthogonal";
 		
-		public static var instance:IsoProjection = new IsoProjection();
+		//public static var instance:IsoProjection = new IsoProjection(); // not needed
 		private var projection:Matrix;
 		private var projectionInverse:Matrix;
 		private var pt:Point;

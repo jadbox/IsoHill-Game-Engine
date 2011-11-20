@@ -42,7 +42,7 @@ package isohill.plugins
 		public function advanceTime(time:Number):void {
 			position.update(time); // update the point if it's dynamic like Point3Mouse
 			
-			engine.move( -position.x , -position.y);
+			engine.moveTo( -position.x , -position.y);
 			position.z = Math.min(ZOOM_IN_LIMIT, position.z);
 			position.z = Math.max(ZOOM_OUT_LIMIT, position.z);
 			engine.currentZoom = position.z;

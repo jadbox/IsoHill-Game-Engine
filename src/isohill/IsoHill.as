@@ -40,6 +40,7 @@ package isohill
 		private var plugins:Vector.<IPlugin>;
 		private var _juggler:Juggler;
 		private var container:Sprite = new Sprite();
+		private var position:Point;
 		
 		public function IsoHill() 
 		{
@@ -47,6 +48,7 @@ package isohill
 			plugins = new <IPlugin>[];
 			layersHash = new Dictionary();
 			_juggler = new Juggler();
+			position = new Point(1, 1);
 			instance = this;
 			addChild(container);
 		}
@@ -54,21 +56,28 @@ package isohill
 			return _juggler;
 		}
 		public function set currentZoom(val:Number):void {
-			scaleX = scaleY = val;
+			container.scaleX = container.scaleY = val;
 		}
 		public function get currentZoom():Number {
-			return scaleX;
+			return container.scaleX;
 		}
-		public function get position():Point {
-			return new Point(container.x, container.y);
+		public function get positionX():Number {
+			return position.x;
 		}
-		public function set position(val:Point):void {
-			container.x = val.x;
-			container.y = val.y;
+		public function get positionY():Number {
+			return position.y;
+		}
+		public function set positionX(val:Number):void {
+			position.x = val;
+		}
+		public function set positionY(val:Number):void {
+			position.y = val;
+		}
+		public function moveTo(x:Number, y:Number):void {
+			position.setTo(x, y);
 		}
 		public function move(x:Number, y:Number):void {
-			container.x = x;
-			container.y = y;
+			position.offset(x, y);
 		}
 		public override function localToGlobal(pt:Point):Point {
 			return container.localToGlobal(pt);
@@ -137,6 +146,7 @@ package isohill
 			// update sprites
 			for each(var layer:GridDisplay in layers) {
 				if (layer != null)  {
+					if (layer.autoPosition) layer.moveTo(position.x, position.y);
 					layer.advanceTime(time, this);
 				}
 			}

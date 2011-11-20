@@ -32,9 +32,11 @@ package isohill
 		private var tileWidth:int = 1;
 		private var tileHeight:int = 1;
 		private var projection:IProjection;
+		private var ratio:Point = new Point(1, 1); //movement ratio for parallax
 		public var sort:Boolean = true;
 		public var display:Sprite;
 		public var spriteHash:Dictionary = new Dictionary(true); // sprite name -> IsoDisplay
+		public var autoPosition:Boolean = true; // allow isoHill to position this layer when the cam moves
 		
 		public function GridDisplay(name:String, w:int, h:int, cellwidth:int, cellheight:int, projection:IProjection=null) 
 		{
@@ -49,6 +51,31 @@ package isohill
 			
 			this.projection = projection == null?new IsoProjection():projection;
 			this.projection.onSetup(this);
+		}
+		public function setMoveRatio(xRatio:Number=1, yRatio:Number=1):void {
+			ratio.setTo(xRatio, yRatio);
+		}
+		public function get positionX():Number {
+			return display.x;
+		}
+		public function get positionY():Number {
+			return display.y;
+		}
+		public function set positionX(val:Number):void {
+			display.x = val;
+		}
+		public function set positionY(val:Number):void {
+			display.y = val;
+		}
+		// Absolute move
+		public function moveTo(x:Number, y:Number):void {
+			display.x = x * ratio.x;
+			display.y = y * ratio.y;
+		}
+		// Relative move
+		public function move(x:Number, y:Number):void {
+			display.x += x * ratio.x;
+			display.y += y * ratio.y;
 		}
 		public function layerToScreen(pt:Point3):Point {
 			var answer:Point = projection.layerToScreen(pt);
