@@ -11,7 +11,6 @@ package isohill.plugins
 {
 	import flash.geom.Matrix;
 	import flash.geom.Point;
-	import isohill.components.IsoProjection;
 	import isohill.GridDisplay;
 	import isohill.IsoHill;
 	import isohill.Point3;
@@ -47,13 +46,9 @@ package isohill.plugins
 			position.z = Math.min(ZOOM_IN_LIMIT, position.z);
 			position.z = Math.max(ZOOM_OUT_LIMIT, position.z);
 			engine.currentZoom = position.z;
-		}
-		public function screenToIso(pt:Point):Point {
-			if (!engine) return pt;
-			
-			var pt2:Point = engine.globalToLocal(pt);
-			return IsoProjection.instance.screenToIso(pt2);
-		}
+		}			
+		//var pt2:Point = engine.globalToLocal(pt);
+
 	}
 
 }

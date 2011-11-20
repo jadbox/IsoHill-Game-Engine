@@ -26,6 +26,7 @@ package isohill.components
 		private var assetManagerKey:String;
 		private static var I:int = 0; // current global async index
 		private var i:int = 0; // global index for debugging
+		private var sprite:IsoDisplay;
 
 		public function AsyncTexture(assetManagerKey:String) 
 		{
@@ -33,12 +34,13 @@ package isohill.components
 			this.assetManagerKey = assetManagerKey;	
 		}
 		public function onSetup(sprite:IsoDisplay):void {
+			this.sprite = sprite;
 			sprite.display = AssetManager.instance.getImage(assetManagerKey);
 			//trace("setup " + i);
 		}
 		public function onRemove():void {
 		}
-		public function advanceTime(time:Number, sprite:IsoDisplay):void {
+		public function advanceTime(time:Number):void {
 			var loader:ITextureLoader = AssetManager.instance.getLoader(assetManagerKey);
 			if (loader.isLoaded == false) return;
 			loader.setTexture(sprite);

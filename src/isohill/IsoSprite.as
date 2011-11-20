@@ -14,7 +14,6 @@ package isohill
 	import flash.geom.Point;
 	import isohill.components.AsyncTexture;
 	import isohill.components.IComponent;
-	import isohill.components.IsoProjection;
 	import isohill.loaders.ITextureLoader;
 	import isohill.loaders.TextureLoader;
 	import starling.display.DisplayObject;

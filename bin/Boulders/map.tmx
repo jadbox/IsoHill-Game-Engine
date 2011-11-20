@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="30" height="30" tilewidth="100" tileheight="82">
+ <tileset firstgid="1" name="Brown Block" tilewidth="101" tileheight="171">
+  <image source="Brown Block.png" width="101" height="171"/>
+ </tileset>
+ <tileset firstgid="2" name="Dirt Block" tilewidth="101" tileheight="171">
+  <image source="Dirt Block.png" width="101" height="171"/>
+ </tileset>
+ <tileset firstgid="3" name="Stone Block" tilewidth="101" tileheight="171">
+  <image source="Stone Block.png" width="101" height="171"/>
+ </tileset>
+ <tileset firstgid="4" name="Gem Blue" tilewidth="101" tileheight="171">
+  <image source="Gem Blue.png" width="101" height="171"/>
+ </tileset>
+ <tileset firstgid="5" name="Rock" tilewidth="101" tileheight="171">
+  <image source="Rock.png" width="101" height="171"/>
+ </tileset>
+ <tileset firstgid="6" name="Grass Block" tilewidth="101" tileheight="171">
+  <image source="Grass Block.png" width="101" height="171"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="30" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt0jsKACAMBFGNn/sfWYQEbMRCEgvnwYLdpDClv5TDPLtZ13TzLQHdrp263BDRtY417Q7vrmzm3X3xrwAAAIAbAwRCAIE=
+  </data>
+ </layer>
+</map>

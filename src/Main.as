@@ -46,7 +46,8 @@ package
 			// entry point
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.align = StageAlign.TOP_LEFT;
-			mStarling = new Starling(IsoHillDemo, stage);
+			mStarling = new Starling(NatureDemo, stage);
+			//mStarling = new Starling(BoulderDemo, stage);
 			mStarling.antiAliasing = 2; 
 			mStarling.start();
 		}	

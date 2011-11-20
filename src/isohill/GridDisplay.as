@@ -9,7 +9,11 @@
 */
 package isohill 
 {
+	import flash.geom.Point;
 	import flash.utils.Dictionary;
+	import isohill.components.IComponent;
+	import isohill.projections.IProjection;
+	import isohill.projections.IsoProjection;
 	import isohill.plugins.IPlugin;
 	import starling.display.DisplayObject;
 	import starling.display.Image;
@@ -27,11 +31,12 @@ package isohill
 		private var h:int = 0;
 		private var tileWidth:int = 1;
 		private var tileHeight:int = 1;
+		private var projection:IProjection;
 		public var sort:Boolean = true;
 		public var display:Sprite;
 		public var spriteHash:Dictionary = new Dictionary(true); // sprite name -> IsoDisplay
 		
-		public function GridDisplay(name:String, w:int, h:int, cellwidth:int, cellheight:int) 
+		public function GridDisplay(name:String, w:int, h:int, cellwidth:int, cellheight:int, projection:IProjection=null) 
 		{
 			this.name = name;
 			this.w = w;
@@ -41,7 +46,20 @@ package isohill
 			display = new Sprite();
 			data = new Vector.<Vector.<IsoDisplay>>(w * h + 1, true);
 			flatData = new <IsoDisplay>[];
+			
+			this.projection = projection == null?new IsoProjection():projection;
+			this.projection.onSetup(this);
 		}
+		public function layerToScreen(pt:Point3):Point {
+			var answer:Point = projection.layerToScreen(pt);
+			return display.localToGlobal(answer);
+		}
+		public function screenToLayer(pt:Point):Point3 {
+			pt = display.globalToLocal(pt);
+			return projection.screenToLayer(pt);
+		}
+		public function get numChildren():int { return flatData.length; }
+		public function getChildAtIndex(index:int):IsoDisplay { return flatData[index];}
 		public function toString():String {
 			var result:String = "";
 			for (var y:int = 0; y < h; y++) {
@@ -137,9 +155,6 @@ package isohill
 			delete spriteHash[val.name];
 			return val;
 		}
-		public function get numChildren():int {
-			return display.numChildren;
-		}
 		public function setCell(val:Vector.<IsoDisplay>):Vector.<IsoDisplay> {
 			for each (var sprite:IsoDisplay in val) push(sprite);
 			return val;
@@ -155,14 +170,15 @@ package isohill
 			for each(var layer:Vector.<IsoDisplay> in data) {
 				if (layer != null) for each(var sprite:IsoDisplay in layer) {
 					if (sprite == null) continue;
+					projection.perSprite(sprite);
 					updateLocation(sprite);
 					sprite.advanceTime(time);
 				}
 			}
 			
-			if (sort) sortSystem();
+			if (sort) sortSystem(time);
 		}
-		private function sortSystem():void {
+		private function sortSystem(time:Number):void {
 			var f:DisplayObject;
 			var numSprites:int = display.numChildren;
 			var c:DisplayObject;
@@ -173,12 +189,6 @@ package isohill
 			}
 		}
 		// Compare two entities and return true if they need to be depth swapped
-		/*
-		private function sorter(f:IsoDisplay, s:IsoDisplay):Boolean {
-			var key:Number = f.display.y + f.display.height; //f.pt.x + f.pt.y + f.display.height;
-			var key2:Number = s.display.y + s.display.height; //s.pt.x + s.pt.y + s.display.height-.1;
-			return key > key2;
-		}*/
 		private function sorterDisplay(f:DisplayObject, s:DisplayObject):Boolean {
 			var key:Number = f.y;
 			var key2:Number = s.y;

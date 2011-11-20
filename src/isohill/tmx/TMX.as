@@ -22,6 +22,7 @@ package isohill.tmx
 	//<map version="1.0" orientation="isometric" width="10" height="10" tilewidth="128" tileheight="64">	
 	public class TMX 
 	{
+		public var orientation:String;
 		public var width:int=0; // number of cells across
 		public var height:int=0; // number of cells down
 		public var tileWidth:int=0; // pixel size of cell width
@@ -44,6 +45,8 @@ package isohill.tmx
 			this.data = XML(data);
 			this.imgsURL = imgsURL;
 			// read root
+			orientation = String(data.@orientation);
+			if (orientation == "") orientation = "isometric";
 			width = int( data.@width );
 			height = int (data.@height);
 			tileWidth = int (data.@tilewidth);

@@ -14,7 +14,6 @@ package isohill
 	import flash.geom.Point;
 	import isohill.components.AsyncTexture;
 	import isohill.components.IComponent;
-	import isohill.components.IsoProjection;
 	import isohill.loaders.ITextureLoader;
 	import isohill.loaders.TextureLoader;
 	import starling.display.DisplayObject;
@@ -45,7 +44,6 @@ package isohill
 			this.state = state!=null?state:new State();
 			this.pt = pt != null?pt:new Point3();
 			
-			components = new <IComponent>[IsoProjection.instance];
 			addComponent(new AsyncTexture(assetID));
 		}
 		// Abstract method for getting the display
@@ -62,6 +60,7 @@ package isohill
 		}
 		// Adds a component to this IsoSprite
 		public function addComponent(c:IComponent):IComponent {
+			if (components == null) components = new Vector.<IComponent>();
 			c.onSetup(this);
 			components.push(c); return c;
 		}
@@ -75,7 +74,7 @@ package isohill
 		public function advanceTime(time:Number):void {
 			var component:IComponent;
 			for each (component in components) {
-				component.advanceTime(time, this); // run the components that don't require an image reference on the IsoSprite if it hasn't been loaded yet
+				component.advanceTime(time); // run the components that don't require an image reference on the IsoSprite if it hasn't been loaded yet
 			}
 		}
 	}	

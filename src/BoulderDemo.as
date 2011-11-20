@@ -30,19 +30,19 @@ package
 	 * 
 	 * "A or Z" to zoom
 	 */
-	public class IsoHillDemo extends Sprite 
+	public class BoulderDemo extends Sprite 
 	{
 		public var isoHill:IsoHill;
 		private var tmx:TMX;
 		
-		public function IsoHillDemo() 
+		public function BoulderDemo() 
 		{
 			addEventListener(Event.ADDED_TO_STAGE, onStageAdded); // let's wait for Flash to get setup
 		}
 		private function onStageAdded(e:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, onStageAdded);
 			
-			TMX.loadTMX("./assets/", "isohilldemo.tmx", onTMXLoad); // Load the TMX map for use in the engine
+			TMX.loadTMX("./Boulders/", "map.tmx", onTMXLoad); // Load the TMX map for use in the engine
 		}
 		private function onTMXLoad(tmx:TMX):void {
 			this.tmx = tmx;

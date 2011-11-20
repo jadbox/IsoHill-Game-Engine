@@ -15,6 +15,7 @@ package isohill.tmx
 	import isohill.IsoHill;
 	import isohill.IsoMovieClip;
 	import isohill.IsoSprite;
+	import isohill.projections.IsoProjection;
 	import isohill.loaders.TextureLoader;
 	import isohill.loaders.TexturesLoader;
 	import isohill.plugins.IPlugin;
@@ -89,7 +90,8 @@ package isohill.tmx
 			}
 		}
 		public function makeEmptyGridOfSize(tmxLayerIndex:int, name:String):GridDisplay {
-			var layer:GridDisplay = new GridDisplay(name, tmx.width, tmx.height, tmx.tileWidth, tmx.tileHeight);
+			
+			var layer:GridDisplay = new GridDisplay(name, tmx.width, tmx.height, tmx.tileWidth, tmx.tileHeight, new IsoProjection(tmx.orientation, 1, tmx.tileHeight / tmx.tileWidth));
 			for (var i:int = 0; i <= tmxLayerIndex; i++) {
 				if (i == linkedLayer.length) linkedLayer.push(null);
 			}
