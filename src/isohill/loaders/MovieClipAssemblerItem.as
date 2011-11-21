@@ -11,6 +11,10 @@ package isohill.loaders
 {
 	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
+	import flash.filters.BitmapFilter;
+	import flash.filters.BlurFilter;
+	import flash.filters.ColorMatrixFilter;
+	import flash.geom.Matrix;
 	/**
 	 * Items for MovieClipAssembler that specifies how items should be loaded and assembled
 	 * @author Jonathan Dunlap
@@ -23,9 +27,11 @@ package isohill.loaders
 		public var scaleY:Number=1;
 		public var rotation:Number;
 		public var file:String;
+		public var alpha:Number = 1;
 		public var linkage:String;
 		public var children:Vector.<MovieClipAssemblerItem>;
 		public var mc:MovieClip;
+		public var filters:Array = new Array();
 		
 		private var onLoaderCallback:Function;
 		private var parseChild:int = 0;
@@ -40,11 +46,29 @@ package isohill.loaders
 			if (o.file) item.file = String(o.file);
 			if (o.mc && o.mc is MovieClip) item.mc = o.mc;
 			if (o.linkage) item.linkage = String(o.linkage);
+			if (o.alpha) item.alpha = Number(o.alpha);
+			if (o.red || o.green || o.blue) {
+				var filter:ColorMatrixFilter = new ColorMatrixFilter(getBasicMatrix(o.red, o.green, o.blue));
+				var filters:Array = new Array();
+				item.filters.push(filter);
+			}
+			if (o.blur) {
+				var blur:BlurFilter = new BlurFilter(o.blur, o.blur);
+				item.filters.push(blur);
+			}
 			if (o.children)
 			for each(var child:Object in o.children) {
 				item.children.push(make(child));
 			}
 			return item;
+		}
+		private static function getBasicMatrix(red:Array=null, green:Array=null, blue:Array=null):Array {
+			var matrix:Array = new Array();
+			matrix = matrix.concat(red?red:[1, 0, 0, 0, 0]); // red
+            matrix = matrix.concat(green?green:[0, 1, 0, 0, 0]); // green
+            matrix = matrix.concat(blue?blue:[0, 0, 1, 0, 0]); // blue
+            matrix = matrix.concat([0, 0, 0, 1, 0]); // alpha
+			return matrix;
 		}
 		public function MovieClipAssemblerItem() 
 		{
@@ -66,10 +90,12 @@ package isohill.loaders
 		private function onLoad(mc:MovieClip):void {
 			mc.x = x;
 			mc.y = y;
+			mc.alpha = alpha;
 			mc.scaleX = scaleX;
 			mc.scaleY = scaleY;
 			mc.rotation = rotation;
 			this.mc = mc;
+			mc.filters = filters;
 			loadChild(parseChild);
 		}
 		private function loadChild(index:int):void {
