@@ -17,6 +17,7 @@ package isohill
 	import starling.animation.Juggler;
 	import starling.core.Starling;
 	import starling.display.Sprite;
+	import starling.events.Event;
 	/**
 	 * IsoHill is a new isometric engine for Flash Player 11 [molehill] built on top of the open 2D framework Starling. 
 	 * Features: 
@@ -39,6 +40,7 @@ package isohill
 		public var layersHash:Dictionary; // indexed my layer name (key:*, value:GridDisplay)
 		private var plugins:Vector.<IPlugin>;
 		private var _juggler:Juggler;
+		private var displayArea:Sprite = new Sprite();
 		private var container:Sprite = new Sprite();
 		private var position:Point;
 		
@@ -50,7 +52,16 @@ package isohill
 			_juggler = new Juggler();
 			position = new Point(1, 1);
 			instance = this;
-			addChild(container);
+			addChild(displayArea);
+			displayArea.addChild(container);
+			this.addEventListener(Event.ADDED_TO_STAGE, onStage);
+		}
+		private function onStage(e:*):void {
+			setSize(stage.stageWidth, stage.stageHeight);
+		}
+		public function setSize(width:Number, height:Number):void {
+			displayArea.x = width * .5;
+			displayArea.y = height * .5;
 		}
 		public function get juggler():Juggler {
 			return _juggler;

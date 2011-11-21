@@ -33,8 +33,6 @@ package isohill.plugins
 		}
 		public function onSetup(engine:IsoHill):void {
 			this.engine = engine;
-			engine.x = (engine.stage.stageWidth * .5);
-			engine.y = (engine.stage.stageHeight * .5);
 		}
 		public function onRemove():void {
 			
@@ -47,8 +45,6 @@ package isohill.plugins
 			position.z = Math.max(ZOOM_OUT_LIMIT, position.z);
 			engine.currentZoom = position.z;
 		}			
-		//var pt2:Point = engine.globalToLocal(pt);
-
 	}
 
 }
