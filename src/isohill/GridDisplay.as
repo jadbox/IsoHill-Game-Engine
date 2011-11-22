@@ -54,7 +54,7 @@ package isohill
 		
 		/**
 		 * Constructor 
-		 * @param name Name of the grid
+		 * @param name Unique name of the grid
 		 * @param w Numbers of cells wide of the grid
 		 * @param h Numbers of cells height of the grid
 		 * @param cellwidth Pixel width of each cell

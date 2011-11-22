@@ -64,7 +64,7 @@ package
 				var layerName:String = layer.name;
 				var grid:GridDisplay = tmxPlugin.makeEmptyGridOfSize(i, layerName);
 				if (layerName.indexOf("earth")!=-1) grid.flatten(); // disable sorting and flatten the ground as it is not dynamic (speed improvement)
-				isoHill.addLayer(i, layerName, grid); // add the layer to the engine
+				isoHill.addLayer(i, grid); // add the layer to the engine
 			}
 			//isoHill.addPlugin(new XRayLayers());
 			isoHill.addPlugin(tmxPlugin); // adding the plugin

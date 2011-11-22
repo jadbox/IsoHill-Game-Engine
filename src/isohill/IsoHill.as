@@ -146,17 +146,17 @@ package isohill
 		/**
 		 * Adds a GridDisplay layer to the engine 
 		 * @param index Render index location of the layer (0 is bottom)
-		 * @param name Name of the layer
-		 * @param layer
+		 * @param layer GridDisplay object to add
 		 * 
 		 */		
-		public function addLayer(index:int, name:String, layer:GridDisplay):void {
+		public function addLayer(index:int, layer:GridDisplay):void {
+			if (layer.name == "" || layer.name == null) throw new Error("invalid layer name");
+			if (layersHash[layer.name] != null) throw new Error("layer "+layer.name+" already added");
 			for (var i:int = 0; i <= index; i++) {
 				if (i == index) { layers[i] = layer; break; }
 				else if (i == layers.length) layers.push(null);
 			}
-			layersHash[name] = layer;
-			layer.name = name;
+			layersHash[layer.name] = layer;
 			if(layer!=null) container.addChild(layer.display);
 		}
 		/**
