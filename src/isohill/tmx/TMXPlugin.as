@@ -42,6 +42,7 @@ package isohill.tmx
 			this.tmx = tmx;
 			linkedLayer = new <GridDisplay>[];
 		}
+		public function get tmxData():TMX { return tmx;}
 		/**
 		 * Internal use only
 		 */
