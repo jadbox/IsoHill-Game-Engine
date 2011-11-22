@@ -31,6 +31,13 @@ package isohill.projections
 		private var projectionInverse:Matrix;
 		private var pt:Point;
 		
+		/**
+		 * This class projects points to and from isometric/orthogonal
+		 * @param type Can be either "isometric" or "orthogonal"
+		 * @param xScale usually 1
+		 * @param yScale the compression of the y axis (usally .5)
+		 * 
+		 */
 		public function IsoProjection(type:String = "isometric", xScale:Number = 1, yScale:Number = .5) 
 		{
 			pt = new Point();

@@ -34,16 +34,16 @@ package isohill.plugins
 			
 		}
 		public function advanceTime(time:Number):void {
-			if (layerIndex == -1) { layerIndex = engine.layers.length - 1; alpha = 1; return; }
+			if (layerIndex == -1) { layerIndex = engine.numberOfLayers - 1; alpha = 1; return; }
 			//trace(time);
-			engine.layers[layerIndex].display.alpha = alpha;
+			engine.getLayerByIndex(layerIndex).display.alpha = alpha;
 			counter += 1;
 			if (paused && counter < SPEED) return;
 			paused = false;
 			counter = 0;
 			alpha -= .01;
 			if (alpha <= -.4) {
-				engine.layers[layerIndex].display.alpha = 1;
+				engine.getLayerByIndex(layerIndex).display.alpha = 1;
 				layerIndex--;
 				alpha = 1;
 				paused = true;

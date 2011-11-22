@@ -20,12 +20,28 @@ package isohill.loaders
 	 */
 	public interface ITextureLoader 
 	{
+		/**
+		 * Set the created Texture on a IsoDisplay object 
+		 * @param sprite
+		 * 
+		 */
 		function setTexture(sprite:IsoDisplay):void;
+		/**
+		 * Returns true if the Texture has been loaded and ready to use on an IsoDisplay
+		 */
 		function get isLoaded():Boolean;
+		/**
+		 * Returns the unique ID for this display asset
+		 */
 		function get id():String;
+		/**
+		 * Returns a Starling display object that should be used for this asset
+		 */
 		function getDisplay():DisplayObject;
+		/**
+		 * Instructs the loader to start loading. This is called by the AssetManager when a loader is added.
+		 */
 		function load():void;
-	//	function transparencyCheck(x:Number, y:Number):Boolean;
 	}
 	
 }

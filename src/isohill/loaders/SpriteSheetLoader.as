@@ -23,10 +23,10 @@ package isohill.loaders
 	import isohill.starling.HitMovieClip;
 	import starling.textures.Texture;
 	/**
-	 * Loads one texture for multiple frames
+	 * Loads a spritesheet Texture image and cuts out Textures for each sprite
 	 * @author Jonathan Dunlap
 	 */
-	public class TexturesLoader implements ITextureLoader
+	public class SpriteSheetLoader implements ITextureLoader
 	{
 		public var url:String;
 		
@@ -36,17 +36,27 @@ package isohill.loaders
 		private var offset:Point;
 		private static var proxyTexture:Vector.<Texture>;
 
-		public function TexturesLoader(url:String, frames:Vector.<Rectangle>, offset:Point=null, hitMapTest:Boolean=true) 
+		/**
+		 * Constructor
+		 * @param url URL location of the image
+		 * @param frames Areas of the sprites in the image
+		 * @param offset Position offset of each of the textures if needed
+		 * @param hitMapTest Use pixel collision (default true)
+		 * 
+		 */
+		public function SpriteSheetLoader(url:String, frames:Vector.<Rectangle>, offset:Point=null, hitMapTest:Boolean=true) 
 		{
 			this.url = url;
 			this.frames = frames;
 			this.offset = offset?offset:new Point();
 			if(hitMapTest) hitMap = new <GridBool>[];
 		}
+		/** @inheritDoc */
 		public function getDisplay():DisplayObject {
 			if(proxyTexture==null) proxyTexture = new <Texture>[Texture.empty(22, 22, 0xff990000)];
 			return new HitMovieClip(proxyTexture);
 		}
+		/** @inheritDoc */
 		public function load():void {
 			ImgLoader.instance.getBitmapData(url, onLoad);
 		}
@@ -63,11 +73,14 @@ package isohill.loaders
 			}
 			
 		}
+		/** @inheritDoc */
 		public function get id():String { return url; }
+		/** @inheritDoc */
 		public function setTexture(sprite:IsoDisplay):void {
 			IsoMovieClip(sprite).setTexture(offset, textures);
 			IsoMovieClip(sprite).setHitmap(hitMap);
 		}
+		/** @inheritDoc */
 		public function get isLoaded():Boolean {
 			return textures !== null;
 		}

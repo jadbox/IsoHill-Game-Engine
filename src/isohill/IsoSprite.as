@@ -35,10 +35,11 @@ package isohill
 		{
 			super(assetID, name, pt, state);
 		}
+		/** @inheritDoc */
 		public override function get display():DisplayObject {
 			return _display;
 		}
-		// Internal use for setting the base Image or MovieClip
+		/** @inheritDoc */
 		public override function set display(val:DisplayObject):void {
 			if (val == null) throw new Error("img is null");
 			if (!(val is HitImage)) throw new Error("Starling DisplayObject is not an Image.");
@@ -47,9 +48,20 @@ package isohill
 			}
 			_display = HitImage(val);
 		}
+		/**
+		 * Sets the collision hitMap for pixel perfect collisions 
+		 * @param hitMap GridBool representing hit areas (0 is none, 1 is hit)
+		 * 
+		 */
 		public function setHitmap(hitMap:GridBool):void {
 			 _display.hitMap = hitMap;
 		}
+		/**
+		 * Sets the Texture, usually done by the ITextureLoader object.
+		 * @param offset manual position location offset
+		 * @param val Texture object
+		 * 
+		 */
 		public function setTexture(offset:Point, val:Texture):void {
 			_display.texture = val;
 			if (!offset.y) offset.y = 0;

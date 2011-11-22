@@ -18,14 +18,21 @@ package isohill
 	 */
 	public class Point3 extends Point 
 	{
+		/**
+		 * Z location 
+		 */
 		public var z:Number;
 		public function Point3(x:Number=1, y:Number=1, z:Number=1) 
 		{
 			super(x, y);
 			this.z = z;
 		}
+		/**
+		 * Allows the point to update itself if used in an extended class 
+		 * @param time
+		 * 
+		 */
 		public function update(time:Number):void {
-			// allows for self-updating points like Point3Mouse
 		}
 	}
 

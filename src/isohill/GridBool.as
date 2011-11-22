@@ -21,6 +21,12 @@ package isohill
 		private var data:Vector.<Boolean>;
 		private var width:int=0;
 		private var height:int=0;
+		/**
+		 * Constructor 
+		 * @param width The width bounds of the grid
+		 * @param height the height bounds of the grid
+		 * 
+		 */		
 		public function GridBool(width:int, height:int) 
 		{
 			this.width = width;
@@ -30,15 +36,35 @@ package isohill
 			height = Math.max(height, 1); // same here
 			data = new Vector.<Boolean>(width * height, true); // make a prefined fixed sized array for performance
 		}
+		/**
+		 * Returns the value from a specific cell location 
+		 * @param x Cell x location
+		 * @param y Cell y location
+		 * @return Boolean value of cell
+		 * 
+		 */		
 		public function getCell(x:int, y:int):Boolean {
 			var index:int = y * width + x; // get the index of the single array for the grid position
 			if (index >= data.length) return false;
 			return data[index];
 		}
+		/**
+		 * Sets the cell value at a specific location 
+		 * @param x Cell x location
+		 * @param y Cell y location
+		 * @param value Value of the cell
+		 * @return Resulting value of the cell
+		 * 
+		 */		
 		public function setCell(x:int, y:int, value:Boolean):Boolean {
 			var index:int = y * width + x; // get the index of the single array for the grid position
 			return data[index] = value;
 		}
+		/**
+		 * Pretty printer for the grid
+		 * @return String containing a nice look at the grid
+		 * 
+		 */		
 		public function toString():String {
 			var result:String = "";
 			for (var y:int = 0; y < height; y++) {
@@ -49,6 +75,13 @@ package isohill
 			}	
 			return result; 
 		}
+		/**
+		 * This static method takes a Bitmapdata object and converts the transparency data into a GridBool. (0 is transparent, 1 is solid)
+		 * @param data BitmapData object as a source
+		 * @param area Area location in the bitmap to crop
+		 * @return resulting GridBool
+		 * 
+		 */		
 		public static function fromBitMapDataAlpha(data:BitmapData, area:Rectangle = null):GridBool {
 			var sx:int = area?Math.floor(area.x):0;
 			var sy:int = area?Math.floor(area.y):0;

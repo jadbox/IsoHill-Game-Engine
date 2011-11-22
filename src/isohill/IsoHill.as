@@ -11,8 +11,10 @@ package isohill
 {
 	import flash.geom.Point;
 	import flash.utils.Dictionary;
+	
 	import isohill.plugins.IPlugin;
 	import isohill.tmx.TMXLayer;
+	
 	import starling.animation.IAnimatable;
 	import starling.animation.Juggler;
 	import starling.core.Starling;
@@ -36,14 +38,18 @@ package isohill
 	{
 		public static var instance:IsoHill; // global handler for the engine, must be instanced first
 		
-		public var layers:Vector.<GridDisplay>; // it's a plugin too, but it's special and gets its own property
-		public var layersHash:Dictionary; // indexed my layer name (key:*, value:GridDisplay)
+		private var layers:Vector.<GridDisplay>; // it's a plugin too, but it's special and gets its own property
+		private var layersHash:Dictionary; // indexed my layer name (key:*, value:GridDisplay)
 		private var plugins:Vector.<IPlugin>;
 		private var _juggler:Juggler;
 		private var displayArea:Sprite = new Sprite();
 		private var container:Sprite = new Sprite();
 		private var position:Point;
 		
+		/**
+		 * Constructor
+		 * 
+		 */
 		public function IsoHill() 
 		{
 			layers = new <GridDisplay>[];
@@ -59,97 +65,195 @@ package isohill
 		private function onStage(e:*):void {
 			setSize(stage.stageWidth, stage.stageHeight);
 		}
+		/**
+		 * By default, the size of the engine is the stage bounds. To manually set the size, use this method.
+		 * @param width Width of the viewable bounds of the engine
+		 * @param height Height of the viewable bounds of the engine
+		 * 
+		 */		
 		public function setSize(width:Number, height:Number):void {
 			displayArea.x = width * .5;
 			displayArea.y = height * .5;
 		}
+		/**
+		 * A shared juggler instance for systems that depend on the engine running
+		 */		
 		public function get juggler():Juggler {
 			return _juggler;
 		}
+		/**
+		 * Manually set the zoom level 
+		 */		
 		public function set currentZoom(val:Number):void {
 			container.scaleX = container.scaleY = val;
 		}
+		/**
+		 *  Returns zoom level
+		 */		
 		public function get currentZoom():Number {
 			return container.scaleX;
 		}
+		/**
+		 * Returns the x position of its layers
+		 */		
 		public function get positionX():Number {
 			return position.x;
 		}
+		/**
+		 * Returns the y position of its layers
+		 */	
 		public function get positionY():Number {
 			return position.y;
 		}
+		/**
+		 * Sets the x position of its layers
+		 */	
 		public function set positionX(val:Number):void {
 			position.x = val;
 		}
+		/**
+		 * Sets the y position of its layers
+		 */
 		public function set positionY(val:Number):void {
 			position.y = val;
 		}
+		/**
+		 * Absolute position move of its layers
+		 * @param x X Position
+		 * @param y Y Position
+		 * 
+		 */		
 		public function moveTo(x:Number, y:Number):void {
 			position.setTo(x, y);
 		}
-		public function move(x:Number, y:Number):void {
+		/**
+		 *  Offsets the position of its layers
+		 * @param x Offset by X amount
+		 * @param y Offset by Y amount
+		 * 
+		 */		
+		public function offset(x:Number, y:Number):void {
 			position.offset(x, y);
 		}
+		/** @inheritDoc */
 		public override function localToGlobal(pt:Point):Point {
 			return container.localToGlobal(pt);
 		}
+		/** @inheritDoc */
 		public override function globalToLocal(pt:Point):Point {
 			return container.globalToLocal(pt);
 		}
+		/**
+		 * Adds a GridDisplay layer to the engine 
+		 * @param index Render index location of the layer (0 is bottom)
+		 * @param name Name of the layer
+		 * @param layer
+		 * 
+		 */		
 		public function addLayer(index:int, name:String, layer:GridDisplay):void {
 			for (var i:int = 0; i <= index; i++) {
 				if (i == index) { layers[i] = layer; break; }
 				else if (i == layers.length) layers.push(null);
 			}
 			layersHash[name] = layer;
+			layer.name = name;
 			if(layer!=null) container.addChild(layer.display);
 		}
+		/**
+		 * Removes a render layer from the engine 
+		 * @param layer
+		 * 
+		 */		
 		public function removeLayer(layer:GridDisplay):void {
 			var index:int = layers.indexOf(layer);
 			layers.splice(index, 1);
 			delete layersHash[layer.name];
 			container.removeChild(layer.display);
 		}
-		public function removeLayerByName(name:String):void {
-			var layer:GridDisplay = layersHash[name];
-			removeLayer(layer);
-		}
-		public function removeLayerByIndex(index:int):void {
-			var layer:GridDisplay = layers[index];
-			removeLayer(layer);
-		}
+		/**
+		 * Returns the number of layers added to the engine
+		 */		
+		public function get numberOfLayers():int { return layers.length; }
+		/**
+		 * Get a layer by its render index 
+		 * @param index Index value of the layer
+		 * @return GridDisplay object of the located layer
+		 * 
+		 */		
 		public function getLayerByIndex(index:int):GridDisplay {
 			return layers[index];
 		}
+		/**
+		 * Get a layer by its name
+		 * @param name String name of the layer
+		 * @return GridDisplay object of the located layer
+		 * 
+		 */
 		public function getLayerByName(name:String):GridDisplay {
 			return layersHash[name];
 		}
+		/**
+		 * Locates a sprite by its containing layer name and sprite name 
+		 * @param layerName Name of the layer that the sprite is located
+		 * @param spriteName Name of the sprite
+		 * @return resulting IsoDisplay or null
+		 * 
+		 */		
 		public function getSpriteByLayerName(layerName:String, spriteName:String):IsoDisplay {
-			var layer:GridDisplay = getLayerByName(layerName);
-			var result:IsoDisplay = IsoDisplay(layer.spriteHash[spriteName]);
-			if (result == null) throw new Error("No sprite of name "+spriteName+" on layer: " + layerName);
+			var layer:GridDisplay = getLayerByName(layerName); if(layer==null) return null;
+			var result:IsoDisplay = layer.getByName(spriteName);
 			return result;
 		}
+		/**
+		 * Locates a sprite by its containing layer index and sprite name 
+		 * @param layerIndex Render index of the layer that the sprite is located
+		 * @param spriteName Name of the sprite
+		 * @return resulting IsoDisplay or null
+		 * 
+		 */	
 		public function getSpriteByLayerIndex(layerIndex:int, spriteName:String):IsoDisplay {
 			var layer:GridDisplay = layers[layerIndex];
-			return IsoDisplay(layer.spriteHash[spriteName]);
+			return layer.getByName(spriteName);
 		}
+		/**
+		 * Adds a IPlugin entity to the rendering system. Useful for engine-wide mutations like cameras. 
+		 * @param plugin Plugin entity
+		 * 
+		 */		
 		public function addPlugin(plugin:IPlugin):void {
 			plugins.push(plugin);
 			plugin.onSetup(this);
 		}
+		/**
+		 * Removes a plugin by reference 
+		 * @param plugin
+		 * 
+		 */		
 		public function removePlugin(plugin:IPlugin):void {
 			var index:int = plugins.indexOf(plugin);
 			if (index != -1) plugins.splice(index, 1);
 			plugin.onRemove();
 		}
+		/**
+		 * Start rendering per frame 
+		 * 
+		 */		
 		public function start():void {
 			Starling.juggler.remove(this);
 			Starling.juggler.add(this);
 		}
+		/**
+		 * Stop rendering per frame 
+		 * 
+		 */		
 		public function stop():void {
 			Starling.juggler.remove(this);
 		}
+		/**
+		 * Internal use only for the main render loop 
+		 * @param time Time difference from last frame
+		 * 
+		 */		
 		public function advanceTime(time:Number):void {
 			juggler.advanceTime(time);
 			// update plugins
@@ -163,7 +267,9 @@ package isohill
 			}
 
 		}
-		// Tell the starling juggler that the engine never "completes"
+		/**
+		 * Internal only, Tell the starling juggler that the engine never "completes"
+		 */		
         public function get isComplete():Boolean { return false; }
 	}
 

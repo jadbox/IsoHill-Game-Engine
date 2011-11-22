@@ -12,7 +12,7 @@ package isohill.tmx
 	import flash.utils.Dictionary;
 	import isohill.loaders.ImgLoader;
 	import isohill.AssetManager;
-	import isohill.loaders.TexturesLoader;
+	import isohill.loaders.SpriteSheetLoader;
 	import isohill.utils.Base64;
 	/**
 	 * TMX parser

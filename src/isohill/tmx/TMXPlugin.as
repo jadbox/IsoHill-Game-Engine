@@ -17,7 +17,7 @@ package isohill.tmx
 	import isohill.IsoSprite;
 	import isohill.projections.IsoProjection;
 	import isohill.loaders.TextureLoader;
-	import isohill.loaders.TexturesLoader;
+	import isohill.loaders.SpriteSheetLoader;
 	import isohill.plugins.IPlugin;
 	import isohill.Point3;
 	import starling.display.MovieClip;
@@ -29,14 +29,22 @@ package isohill.tmx
 	 */
 	public class TMXPlugin implements IPlugin
 	{
-		public var tmx:TMX;
-		public var linkedLayer:Vector.<GridDisplay>;
+		private var tmx:TMX;
+		private var linkedLayer:Vector.<GridDisplay>;
 		private var iSprite:int=0;
+		/**
+		 * Constructor 
+		 * @param tmx Requiers a loaded TMX object
+		 * 
+		 */
 		public function TMXPlugin(tmx:TMX) 
 		{
 			this.tmx = tmx;
 			linkedLayer = new <GridDisplay>[];
 		}
+		/**
+		 * Internal use only
+		 */
 		public function onSetup(engine:IsoHill):void {
 			loadTiles();
 			for (var x:int = 0; x < tmx.width; x++) {
@@ -46,16 +54,22 @@ package isohill.tmx
 			}
 			trace("layers created");
 		}
+		/**
+		 * Internal use only
+		 */
 		public function onRemove():void {
 			
 		}
 		private var steps:int=0; // TODO: add async asset tmx sprite creation for when its texture is loaded
+		/**
+		 * Internal use only
+		 */
 		public function advanceTime(time:Number):void {
 
 		}
 		private function loadTiles():void {
 			for each(var tile:TMXTileset in tmx.uniqueTilesets) {
-				AssetManager.instance.addLoader(new TexturesLoader(tmx.getImgSrc(tile.firstgid), tile.areas));
+				AssetManager.instance.addLoader(new SpriteSheetLoader(tmx.getImgSrc(tile.firstgid), tile.areas));
 			}
 		}
 		private function makeSprites(cellX:int, cellY:int):void {
@@ -71,11 +85,17 @@ package isohill.tmx
 				var sprite:IsoMovieClip = new IsoMovieClip(assetID, name, pt3);//IsoSprite = new IsoSprite(assetID, name, pt3);
 				sprite.currentFrame = tmx.getImgFrame(_cell);
 				
-				grid.push(sprite);
+				grid.add(sprite);
 			}
 			// in object layers
 			
 		}
+		/**
+		 * Converts a TMX object layer into a existing grid layer 
+		 * @param grid
+		 * @param group
+		 * 
+		 */
 		public function addObjectsToLayer(grid:GridDisplay, group:TMXObjectgroup):void {
 			for each(var obj:TMXObject in group.objects) {
 				var tile:TMXTileset = tmx.tilesets[obj.gid];
@@ -86,9 +106,16 @@ package isohill.tmx
 				sprite.name = obj.name; 
 				sprite.type = obj.type;
 				sprite.currentFrame = tmx.getImgFrame( obj.gid );
-				grid.push(sprite);
+				grid.add(sprite);
 			}
 		}
+		/**
+		 * Creates a GridDisplay layer that is like the layer found in the TMX format with correct projection and sizing
+		 * @param tmxLayerIndex Layer index
+		 * @param name Name of the layer to create
+		 * @return created GridDisplay
+		 * 
+		 */
 		public function makeEmptyGridOfSize(tmxLayerIndex:int, name:String):GridDisplay {
 			
 			var layer:GridDisplay = new GridDisplay(name, tmx.width, tmx.height, tmx.tileWidth, tmx.tileHeight, new IsoProjection(tmx.orientation, 1, tmx.tileHeight / tmx.tileWidth));

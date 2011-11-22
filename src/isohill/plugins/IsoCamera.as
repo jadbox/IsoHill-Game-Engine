@@ -15,7 +15,7 @@ package isohill.plugins
 	import isohill.IsoHill;
 	import isohill.Point3;
 	/**
-	 * TODO: isometric camera
+	 * Simple isometric camera
 	 * @author Jonathan Dunlap
 	 */
 	public class IsoCamera implements IPlugin

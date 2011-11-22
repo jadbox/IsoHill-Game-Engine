@@ -32,10 +32,11 @@ package isohill
 			super(id, name, pt, state);
 			_display.stop();
 		}
+		/** @inheritDoc */
 		public override function get display():DisplayObject {
 			return _display;
 		}
-		// Internal use for setting the base Image or MovieClip
+		/** @inheritDoc */
 		public override function set display(val:DisplayObject):void {
 			if (val == null) throw new Error("img is null");
 			if (!(val is HitMovieClip)) throw new Error("Starling DisplayObject is not a MovieClip");
@@ -45,9 +46,22 @@ package isohill
 
 			_display = HitMovieClip(val);
 		}
+		/**
+		 * Sets the collision hitMap. This is usually done by the ITextureLoader object.
+		 * @param hitMap Vector of GridBool, representing hit areas (0 is none, 1 is hit)
+		 * 
+		 */
 		public function setHitmap(hitMap:Vector.<GridBool>):void {
 			 _display.hitMap = hitMap;
 		}
+		/**
+		 * Sets the Texture, usually done by the ITextureLoader object.
+		 * @param offset manual position location offset
+		 * @param textures Textures for each frame
+		 * @param durations Durations of each Texture frame
+		 * @param snds Sounds for each Texture frame
+		 * 
+		 */
 		public function setTexture(offset:Point, textures:Vector.<Texture>, durations:Vector.<Number> = null, snds:Vector.<Sound> = null):void {
 			if (textures == null) throw new Error("Textures were null");
 			else if (_display == null) throw new Error("starling.display.MovieClip was null");
@@ -63,6 +77,9 @@ package isohill
 			_display.pivotX = 0 + offset.x;
 			if (layer) layer.forceUpdate();
 		}
+		/**
+		 * Sets the current frame
+		 */
 		public function set currentFrame(val:int):void {
 			if (val < _display.numFrames) { 
 				_display.currentFrame = val; 
@@ -70,27 +87,46 @@ package isohill
 			}
 			else _currentFrame = val;
 		}
+		/**
+		 * Returns the current frame
+		 */
 		public function get currentFrame():int {
 			return _display.currentFrame;
 		}
+		/**
+		 * Play the Texture animation 
+		 */		
 		public function play():void {
 			if (_display.isPlaying) return;
 			_display.play();
 			IsoHill.instance.juggler.add(_display);
 		}
+		/**
+		 * Returns if in play() display mode
+		 */
 		public function get isPlaying():Boolean {
 			return _display.isPlaying;
 		}
+		/**
+		 * Stops the Texture animation from auto playing
+		 */
 		public function stop():void {
 			_display.stop();
 			IsoHill.instance.juggler.remove(_display);
 		}
+		/**
+		 * Pause Texture animation if playing
+		 */
 		public function pause():void {
 			_display.pause();
 		}
+		/**
+		 * Returns number of Texture frames
+		 */
 		public function get numFrames():int {
 			return _display.numFrames;
 		}
+		/** @inheritDoc */
 		public override function advanceTime(time:Number):void {
 			if(!_display.isPlaying && _currentFrame !=-1) currentFrame = _currentFrame;
 			super.advanceTime(time);

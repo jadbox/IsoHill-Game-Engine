@@ -21,11 +21,14 @@ package isohill.loaders
 	import flash.net.URLRequest;
 	import flash.utils.Dictionary;
 	/**
-	 * Simple bitmapdata and xml loader util
+	 * Simple remote asset loader system, for use in loading Textures
 	 * @author Jonathan Dunlap
 	 */
 	public class ImgLoader 
 	{
+		/**
+		 * Global handler for the ImgLoader 
+		 */
 		public static var instance:ImgLoader = new ImgLoader(); // singleton access
 		
 		private var loaderHash:Dictionary = new Dictionary(false); // cache
@@ -34,7 +37,12 @@ package isohill.loaders
 		{
 			
 		}
-		// BitmapData loader with simple caching based on url
+		/**
+		 * BitmapData loader with simple caching based on url
+		 * @param url
+		 * @param onLoad
+		 * 
+		 */
 		public function getBitmapData(url:String, onLoad:Function):void {			
 			var onComplete:Function = function(loader:Loader):void {
 				var bitmap:Bitmap = loader.content as Bitmap;
@@ -43,6 +51,13 @@ package isohill.loaders
 			}
 			var loader:Loader = getLoader(url, onComplete);
 		}
+		/**
+		 * Get a Loader object for a url location (or create it). 
+		 * @param url URL location of the asset
+		 * @param addOnComplete Callback function for when the loader completes
+		 * @return The Loader object found (or created)
+		 * 
+		 */
 		public function getLoader(url:String, addOnComplete:Function=null):Loader {
 			if (loaderHash[url] != null) {
 				if (addOnComplete !== null) addOnComplete( loaderHash[url] );
@@ -54,6 +69,13 @@ package isohill.loaders
 			loaderHash[url] = loader;
 			return loader;
 		}
+		/**
+		 * Get a URLLoader for a url location (or create it). 
+		 * @param url URL location of the asset
+		 * @param addOnComplete Callback function for when the loader completes
+		 * @return The URLLoader object found (or created)
+		 * 
+		 */
 		public function getURLLoader(url:String, addOnComplete:Function=null):URLLoader {
 			if (loaderURLHash[url] != null) {
 				if (addOnComplete !== null) addOnComplete( loaderURLHash[url] );
@@ -65,19 +87,27 @@ package isohill.loaders
 			loaderURLHash[url] = loader;
 			return loader;
 		}
+		/**
+		 * Fetches a SWF by url location and returns a movieclip in the callback 
+		 * @param url URL location
+		 * @param linkage Linkage name of the asset to pull out of the SWF library
+		 * @param onLoad Callback function when the asset is ready for use
+		 * 
+		 */
 		public function getMovieClip(url:String, linkage:String, onLoad:Function):void {
 			var onComplete:Function = function(loader:Loader):void {
 				onLoad(getMovieClipFromLoader(loader, linkage));
 			}
 			var loader:Loader = getLoader(url, onComplete);	
 		}
+		/*
 		public function getMovieClipProxy(url:String, linkage:String):Sprite {
 			var sp:MovieClip = new MovieClip();
 			getMovieClip(url, linkage, function(mc:MovieClip):void {
 				sp.addChild(mc);
 			});
 			return sp;
-		}
+		}*/
 		private function getMovieClipFromLoader(loader:Loader, linkage:String = ""):MovieClip {
 			if (loader.content == null) throw new Error("invalid asset loaded");
 			if (linkage == "" || linkage == null) {
@@ -92,6 +122,12 @@ package isohill.loaders
 			if (display == null) throw new Error("not a bitmap");
 			return display;
 		}
+		/**
+		 * Fetches an XML file 
+		 * @param url URL location of the file
+		 * @param onLoad Callback for when the XML has been loaded with the XML reference
+		 * 
+		 */
 		public function getXML(url:String, onLoad:Function):void {
 			var onComplete:Function = function(loader:URLLoader):void {
 				var data:* = loader.data;

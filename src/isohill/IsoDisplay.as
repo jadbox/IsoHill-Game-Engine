@@ -29,15 +29,34 @@ package isohill
 	 */
 	public class IsoDisplay
 	{
-		public var name:String; // Identifier
-		public var type:String; // type label
+		/**
+		 * Name identifier
+		 */
+		public var name:String; 
+		/**
+		 * Type identifier
+		 */
+		public var type:String;
+		/**
+		 * Local position
+		 */
 		public var pt:Point3; // x, y, z location
+		/**
+		 * State object for the object, useful for games 
+		 */
 		public var state:State; // state of the asset (directives used for AI, player controlling, etc)
-		public var components:Vector.<IComponent>; // collection of sprite manipulators (including projection)
+		private var components:Vector.<IComponent>; // collection of sprite manipulators (including projection)
 		internal var layer:GridDisplay; // backward reference to the container (internal use only)
 		internal var layerIndex:int = -1; // cell index container (internal use only)
 		
-		// Must be given a texture or set with setTexture before use
+		/**
+		 * Must be given a texture or set with setTexture before use
+		 * @param assetID loader ID (see AssetManager)
+		 * @param name name of the element
+		 * @param pt location point
+		 * @param state state object
+		 * 
+		 */
 		public function IsoDisplay(assetID:String, name:String, pt:Point3=null, state:State=null) 
 		{
 			this.name = name;
@@ -46,31 +65,50 @@ package isohill
 			
 			addComponent(new AsyncTexture(assetID));
 		}
-		// Abstract method for getting the display
+		/**
+		 * Abstract method for getting the display
+		 */
 		public function get display():DisplayObject {
 			throw new Error("method get display() must be overridden");
 		}
-		// Internal use for setting the base Image or MovieClip
+		/**
+		 * Internal use for setting the base Starling Image
+		 */
 		public function set display(val:DisplayObject):void {
 			throw new Error("method set display() must be overridden");
 		}
-		// Remove IsoSprite from it's GridDisplay layer
+		/**
+		 * Removes this element from its container
+		 */
 		public function remove():void {
 			if (layer != null) layer.remove(this);
 		}
-		// Adds a component to this IsoSprite
+		/**
+		 * Adds a component to this IsoSprite
+		 * @param c IComponent
+		 * @return IComponent
+		 * 
+		 */
 		public function addComponent(c:IComponent):IComponent {
 			if (components == null) components = new Vector.<IComponent>();
 			c.onSetup(this);
 			components.push(c); return c;
 		}
-		// Removes component by reference
+		/**
+		 * Removes component by reference
+		 * @param component
+		 * 
+		 */
 		public function removeComponent(component:IComponent):void {
 			component.onRemove();
 			var index:int = components.indexOf(component);
 			if (index != -1) components.splice(index, 1);
 		}	
-		// Advanced time on the components if the sprite is ready
+		/**
+		 * Internal use only, advanced time on the components
+		 * @param time
+		 * 
+		 */
 		public function advanceTime(time:Number):void {
 			var component:IComponent;
 			for each (component in components) {

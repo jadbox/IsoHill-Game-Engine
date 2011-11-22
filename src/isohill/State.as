@@ -16,12 +16,34 @@ package isohill
 	 */
 	public class State 
 	{
-		public var name:String; // name of the state ("flee", "attack", "walkTo")
-		public var targetPt:Point3; // point targeted area (useful for a target pixel location)
-		public var target:IsoSprite; // used for moving/using/targeting to another IsoSprite
-		public var start:int; // start time of the state
-		public var end:int; // end time of the state (-1 for no end)
+		/**
+		 * name of the state ("flee", "attack", "walkTo")
+		 */
+		public var name:String;
+		/**
+		 * point targeted area (useful for a target pixel location)
+		 */
+		public var targetPt:Point3;
+		/**
+		 * used for moving/using/targeting to another IsoSprite
+		 */
+		public var target:IsoSprite; 
+		/**
+		 * start time of the state
+		 */
+		public var start:int; 
+		/**
+		 * end time of the state (-1 for no end)
+		 */
+		public var end:int;
 		
+		/**
+		 * Constructor 
+		 * @param name  name of the state
+		 * @param start start time of the state
+		 * @param end end time of the state (-1 for no end)
+		 * 
+		 */
 		public function State(name:String="", start:int = 0, end:int = 0) 
 		{
 			this.name = name;

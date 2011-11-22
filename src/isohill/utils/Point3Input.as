@@ -18,7 +18,7 @@ package isohill.utils
 	import starling.events.Touch;
 	import starling.events.TouchEvent;
 	/**
-	 * ...
+	 * Basic camera point location at which: mouse at corners of the screen moves the point and A/Z zooms
 	 * @author Jonathan Dunlap
 	 */
 	public class Point3Input extends Point3

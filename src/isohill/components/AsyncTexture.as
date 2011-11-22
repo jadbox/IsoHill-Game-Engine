@@ -45,8 +45,7 @@ package isohill.components
 			if (loader.isLoaded == false) return;
 			loader.setTexture(sprite);
 
-			sprite.components.splice(sprite.components.indexOf(this), 1);
-			//trace("loaded " + i);
+			sprite.removeComponent(this);
 		}
 	}
 

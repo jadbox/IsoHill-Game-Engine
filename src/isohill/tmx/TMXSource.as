@@ -20,8 +20,6 @@ package isohill.tmx
 		public var width:int;
 		public var height:int;
 		
-	//	public var bitmapData:BitmapData;
-		
 		//<image source="PlaceholderWindCollector.png" width="1024" height="256"/>
 		public function TMXSource(element:XML) 
 		{

@@ -33,13 +33,20 @@ package isohill.loaders
 		private var hitMap:GridBool;
 		private var hitMapTest:Boolean;
 		private static var proxyTexture:Texture;
-		
+		/**
+		 * Loads a single Texture from an image url
+		 * @param url URL location of the image
+		 * @param offet Offset the texture location if needed
+		 * @param hitMapTest Use pixel collision (default true)
+		 * 
+		 */		
 		public function TextureLoader(url:String, offet:Point=null, hitMapTest:Boolean=true) 
 		{
 			this.url = url;
 			this.offset = offset?offset:new Point();
 			this.hitMapTest = hitMapTest;
 		}
+		/** @inheritDoc */
 		public function getDisplay():DisplayObject {
 			if(proxyTexture==null) proxyTexture = Texture.empty(1,1);
 			return new HitImage(proxyTexture);
@@ -48,18 +55,22 @@ package isohill.loaders
 			texture = Texture.fromBitmapData(bd);
 			if(hitMapTest) hitMap = GridBool.fromBitMapDataAlpha(bd);
 		}
+		/** @inheritDoc */
 		public function setTexture(sprite:IsoDisplay):void {
 			if (texture == null) return;
 			if(!(sprite is IsoSprite)) throw new Error("sprite "+sprite.name+" was created as a "+sprite+" but it's asset was for an IsoSprite");
 			IsoSprite(sprite).setTexture(offset, texture);
 			IsoSprite(sprite).setHitmap(hitMap);
 		}
+		/** @inheritDoc */
 		public function get isLoaded():Boolean {
 			return texture !== null;
 		}
+		/** @inheritDoc */
 		public function get id():String {
 			return url;
 		}
+		/** @inheritDoc */
 		public function load():void {
 			ImgLoader.instance.getBitmapData(url, onLoad);
 		}

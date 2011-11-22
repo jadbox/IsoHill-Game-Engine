@@ -19,6 +19,12 @@ package isohill
 		private var data:Vector.<int>;
 		private var width:int=0;
 		private var height:int=0;
+		/**
+		 * Constructor 
+		 * @param width number of cells wide
+		 * @param height number of cells heigh
+		 * 
+		 */		
 		public function GridInt(width:int, height:int) 
 		{
 			this.width = width;
@@ -28,6 +34,11 @@ package isohill
 			height = Math.max(height, 1); // same here
 			data = new Vector.<int>(width * height, true); // make a prefined fixed sized array for performance
 		}
+		/**
+		 * Pretty string of the grid 
+		 * @return string showing the grid layout
+		 * 
+		 */		
 		public function toString():String {
 			var result:String = "";
 			for (var y:int = 0; y < height; y++) {
@@ -38,10 +49,25 @@ package isohill
 			}	
 			return result; 
 		}
+		/**
+		 * Gets an int from a cell location 
+		 * @param x cell x location
+		 * @param y cell y location
+		 * @return int of that cell
+		 * 
+		 */		
 		public function getCell(x:int, y:int):int {
 			var index:int = y * width + x; // get the index of the single array for the grid position
 			return data[index];
 		}
+		/**
+		 * Sets an int for a cell location 
+		 * @param x cell x location
+		 * @param y cell y location
+		 * @param int value for that cell location
+		 * @return cell's new int value
+		 * 
+		 */
 		public function setCell(x:int, y:int, value:int):int {
 			var index:int = y * width + x; // get the index of the single array for the grid position
 			return data[index] = value;
