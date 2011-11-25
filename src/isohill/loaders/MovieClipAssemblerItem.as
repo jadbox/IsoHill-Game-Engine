@@ -10,11 +10,13 @@
 package isohill.loaders 
 {
 	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.MovieClip;
 	import flash.filters.BitmapFilter;
 	import flash.filters.BlurFilter;
 	import flash.filters.ColorMatrixFilter;
 	import flash.geom.Matrix;
+	import flash.utils.Dictionary;
 	/**
 	 * Items for MovieClipAssembler that specifies how items should be loaded and assembled
 	 * @author Jonathan Dunlap
@@ -29,12 +31,13 @@ package isohill.loaders
 		public var file:String;
 		public var alpha:Number = 1;
 		public var linkage:String;
-		public var children:Vector.<MovieClipAssemblerItem>;
 		public var mc:MovieClip;
 		public var filters:Array = new Array();
 		
+		private var children:Vector.<MovieClipAssemblerItem>;
 		private var onLoaderCallback:Function;
 		private var parseChild:int = 0;
+		private var childrenNames:Dictionary = new Dictionary(); // key is index value of child, value is location of nested container using Vector<String>
 		
 		public static function make(o:Object):MovieClipAssemblerItem {
 			var item:MovieClipAssemblerItem = new MovieClipAssemblerItem();
@@ -58,7 +61,7 @@ package isohill.loaders
 			}
 			if (o.children)
 			for each(var child:Object in o.children) {
-				item.children.push(make(child));
+				item.addItem(make(child), child.name);
 			}
 			return item;
 		}
@@ -69,6 +72,15 @@ package isohill.loaders
             matrix = matrix.concat(blue?blue:[0, 0, 1, 0, 0]); // blue
             matrix = matrix.concat([0, 0, 0, 1, 0]); // alpha
 			return matrix;
+		}
+		/*
+		 * Adds async loading children to this item
+		 * @param item MovieClipAssemblerItem object to nest into this display object
+		 * @param names Nsme and location of the sprite. For example "head" to assign instance name and "body.head" to add to sub container body the child item (now names head)
+		 */ 
+		public function addItem(item:MovieClipAssemblerItem, names:String=null):void {
+			childrenNames[children.length] = names?names.split("."):null;
+			children.push(item);
 		}
 		public function MovieClipAssemblerItem() 
 		{
@@ -81,6 +93,10 @@ package isohill.loaders
 			for each(var child:MovieClipAssemblerItem in children) _id += "," + child.id;
 			return _id;
 		}
+		/*
+		 * Internal use only - used to start the loading process by MovieClipAssebler
+		 * @param onLoaderCallback Callback function when load completes for itself and children
+		 */
 		public function load(onLoaderCallback:Function):void 
 		{
 			this.onLoaderCallback = onLoaderCallback;
@@ -107,7 +123,18 @@ package isohill.loaders
 			child.load(onChildLoad);
 		}
 		private function onChildLoad(childMC:MovieClip):void {
-			mc.addChild(childMC);
+			var location:Array = childrenNames[parseChild];
+			var container:MovieClip = mc;
+			if (location != null && location.length > 0) {
+				childMC.name = String(location.pop());
+				for each(var linkage:String in location) {
+					var nestedChild:* = container.getChildByName(linkage);
+					if (nestedChild != null && nestedChild is MovieClip) container = nestedChild;
+					else throw new Error("Child " + linkage + " was null or not a MovieClip");
+				}
+			}
+			container.addChild(childMC);
+			
 			loadChild(++parseChild);
 		}
 	}
