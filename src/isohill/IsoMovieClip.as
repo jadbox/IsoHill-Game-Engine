@@ -51,6 +51,14 @@ package isohill
 
 			_display = HitMovieClip(val);
 		}
+		/** @inheritDoc */
+		override public function changeTo(assetID:String):void {
+			if (_display) {
+				currentFrame = 0;
+				stop();
+			}
+			super.changeTo(assetID);
+		}
 		/**
 		 * Sets the collision hitMap. This is usually done by the ITextureLoader object.
 		 * @param hitMap Vector of GridBool, representing hit areas (0 is none, 1 is hit)
