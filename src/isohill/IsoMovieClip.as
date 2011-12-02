@@ -11,6 +11,7 @@ package isohill
 {
 	import flash.geom.Point;
 	import flash.media.Sound;
+	import flash.utils.Dictionary;
 	import isohill.IsoSprite;
 	import isohill.Point3;
 	import isohill.State;
@@ -27,10 +28,14 @@ package isohill
 	{
 		private var _currentFrame:int = -1; // flag for not set
 		private var _display:HitMovieClip;
+		private var frameCallbacks:Dictionary; // key is frame int, value is [Function]
+		private var loaded:Boolean;
 		public function IsoMovieClip(id:String, name:String, pt:Point3=null, state:State=null) 
 		{
 			super(id, name, pt, state);
 			_display.stop();
+			frameCallbacks = new Dictionary();
+			frameCallbacks[-100] = []; // onComplete callback token
 		}
 		/** @inheritDoc */
 		public override function get display():DisplayObject {
@@ -76,6 +81,7 @@ package isohill
 			_display.pivotY = _display.height + offset.y;
 			_display.pivotX = 0 + offset.x;
 			if (layer) layer.forceUpdate();
+			loaded = true;
 		}
 		/**
 		 * Sets the current frame
@@ -126,12 +132,51 @@ package isohill
 		public function get numFrames():int {
 			return _display.numFrames;
 		}
+		/**
+		 * Fires a function when playhead reaches a target frame
+		 * @param frame Target frame
+		 * @param callback On target frame, callback is called with IsoMovieClip reference
+		 */
+		public function addFrameCallback(frame:int, callback:Function):void {
+			if (!frameCallbacks[frame]) frameCallbacks[frame] = [];
+			frameCallbacks[frame].push(callback);
+		}
+		/**
+		 * Fires a function when playhead reaches a target frame
+		 * @param callback On target frame, callback is called with IsoMovieClip reference
+		 */
+		public function addLastFrameCallback(callback:Function):void {
+			frameCallbacks[-100].push(callback);
+		}
+		/** @inheritDoc */
+		override public function remove():void {
+			frameCallbacks = new Dictionary(); // clear out function references
+			super.remove();
+		}
+		/**
+		 * Removes a callback function for addFrameCallback
+		 * @param frame Target frame
+		 * @param callback Callback to be removed
+		 */
+		public function removeFrameCallback(frame:int, callback:Function):void {
+			if (!frameCallbacks[frame]) return;
+			var index:int = frameCallbacks[frame].indexOf(callback);
+			if (index == -1) return;
+			frameCallbacks[frame].splice(index, 1); 
+		}
 		/** @inheritDoc */
 		public override function advanceTime(time:Number):void {
 			if(!_display.isPlaying && _currentFrame !=-1) currentFrame = _currentFrame;
 			super.advanceTime(time);
 			if (_display.isPlaying) {
 				_display.advanceTime(time);
+			}
+			var cb:Function;
+			if(loaded) {
+				if (frameCallbacks[currentFrame] )
+					for each(cb in frameCallbacks[currentFrame]) cb(this);
+				if (currentFrame == numFrames-1)
+					for each(cb in frameCallbacks[ -100]) cb(this);
 			}
 		}
 	}

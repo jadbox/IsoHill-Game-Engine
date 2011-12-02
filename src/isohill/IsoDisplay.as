@@ -48,7 +48,7 @@ package isohill
 		private var components:Vector.<IComponent>; // collection of sprite manipulators (including projection)
 		internal var layer:GridDisplay; // backward reference to the container (internal use only)
 		internal var layerIndex:int = -1; // cell index container (internal use only)
-		
+		private var async:AsyncTexture;
 		/**
 		 * Must be given a texture or set with setTexture before use
 		 * @param assetID loader ID (see AssetManager)
@@ -63,7 +63,15 @@ package isohill
 			this.state = state!=null?state:new State();
 			this.pt = pt != null?pt:new Point3();
 			
-			addComponent(new AsyncTexture(assetID));
+			changeTo(assetID);
+		}
+		/**
+		 * Changes to a new asset ID (must be from the same type of loader)
+		 * @param assetID loader ID (see AssetManager)
+		 */
+		public function changeTo(assetID:String):void {
+			if (async) removeComponent(async);
+			addComponent(async = new AsyncTexture(assetID));
 		}
 		/**
 		 * Abstract method for getting the display
@@ -103,6 +111,7 @@ package isohill
 			component.onRemove();
 			var index:int = components.indexOf(component);
 			if (index != -1) components.splice(index, 1);
+			if (component == async) async = null;
 		}	
 		/**
 		 * Internal use only, advanced time on the components

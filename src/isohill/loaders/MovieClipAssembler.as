@@ -55,8 +55,8 @@ package isohill.loaders
 		public function getDisplay():DisplayObject
 		{
 			if (proxyTexture == null)
-				proxyTexture = new <Texture>[Texture.empty(25, 25, 0xffff0000)];
-			return new HitMovieClip(proxyTexture);
+				proxyTexture = new <Texture>[Texture.empty(15, 15, 0x25ff0000)];
+			return new HitMovieClip(proxyTexture, fps);
 		}
 		
 		/* INTERFACE isohill.loaders.ITextureLoader */
@@ -81,7 +81,9 @@ package isohill.loaders
 			if (mc == null)
 				throw new Error("failed to load MovieClipAssemblerItem");
 		//	var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc);
-			textures = getTextures(mc, hitMap);
+			var container:MovieClip = new MovieClip();
+			container.addChild(mc);
+			textures = getTextures(container, hitMap);
 		}
 		
 		// Converts a MovieClip to a series of Textures in a Vector
@@ -93,6 +95,7 @@ package isohill.loaders
 			var frames:int = findLongestFrame(mc);
 			var matrix:Matrix = new Matrix();
 			var rect:Rectangle = findBiggestFrame(mc, frames);
+			if (rect.width < 1 || rect.height < 1) throw new Error("Empty MC assembled object (zero width or zero height)");
 			for (var i:int = 1; i <= frames; i++)
 			{
 				nextFrame(mc);
@@ -150,7 +153,7 @@ package isohill.loaders
 		
 		private static function resetFrame(mc:MovieClip):void
 		{
-			mc.gotoAndStop(1);
+			mc.gotoAndStop(0);
 			for (var i:int = 0; i < mc.numChildren; i++)
 			{
 				var child:flash.display.DisplayObject = mc.getChildAt(i);

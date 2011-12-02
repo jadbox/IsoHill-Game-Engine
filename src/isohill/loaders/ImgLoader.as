@@ -82,7 +82,8 @@ package isohill.loaders
 				return loaderHash[url];
 			}
 			var loader:URLLoader = new URLLoader();
-			if (addOnComplete !== null) loader.addEventListener(Event.COMPLETE, function(e:Event):void { addOnComplete(loader); });
+			if (addOnComplete !== null) loader.addEventListener(Event.COMPLETE, function(e:Event):void { addOnComplete(loader); } );
+			loader.addEventListener(IOErrorEvent.IO_ERROR, function(e:IOErrorEvent):void { trace("URL:" + url, e.text) } );
 			loader.load(new URLRequest(url));
 			loaderURLHash[url] = loader;
 			return loader;

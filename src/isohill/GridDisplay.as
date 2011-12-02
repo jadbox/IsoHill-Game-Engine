@@ -226,7 +226,7 @@ package isohill
 		 */
 		public function toLayerPt(x:int, y:int, z:int = 1):Point3 {
 			x++; y++;
-			return new Point3(x * (tileHeight - 1), y * (tileHeight - 1), z);
+			return new Point3(x * (tileHeight-1), y * (tileHeight-1), z);
 		}
 		// 
 		/**
@@ -237,7 +237,7 @@ package isohill
 		 * 
 		 */		
 		public function fromLayerPt(x:Number, y:Number):Point {
-			return new Point(x / (tileHeight - 1)+1, y / (tileHeight - 1)+1);
+			return new Point(Math.floor(x / (tileHeight-1))+1, Math.floor(y / (tileHeight-1))+1);
 		}
 		private function updateLocation(val:IsoDisplay):void {
 			var x:int = Math.floor(val.pt.x / tileHeight);
@@ -310,6 +310,23 @@ package isohill
 			for each (var sprite:IsoDisplay in val) add(sprite);
 			return val;
 		}
+		/**
+		 * Maps a function (Vector of IsoDisplay -> value|object) over every entry in the grid and returns a 2D array of those transformed elements
+		 * @param func Function to execute on every IsoDisplay object in the grid and returns a value
+		 * @return 2D map of elements returned from the input function
+		 * 
+		 */
+		public function toMap(func:Function):Array {
+			if (func == null) throw new Error("null function");
+			var map:Array = [];
+			for (var y:int = 0; y < h; y++) {
+				for (var x:int = 0; x < w; x++) {
+					if (map[y] == null) map[y] = [];
+					map[y][x] = func(getCell(x, y));
+				}
+			}
+			return map;
+		}
 		private function addStarlingChild(image:DisplayObject):void {
 			var wasFlat:Boolean = display.isFlattened;
 			if(wasFlat) display.unflatten();
@@ -351,6 +368,14 @@ package isohill
 			var key2:Number = s.y;
 			return key > key2;
 		}
+		/**
+		 * Height of the grid in cells
+		 */	
+		public function get height():int { return h; }
+		/**
+		 * Width of the grid in cells
+		 */	
+		public function get width():int { return w; }
 	}
 
 }

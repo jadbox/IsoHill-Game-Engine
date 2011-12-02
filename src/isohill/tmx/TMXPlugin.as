@@ -20,6 +20,7 @@ package isohill.tmx
 	import isohill.loaders.SpriteSheetLoader;
 	import isohill.plugins.IPlugin;
 	import isohill.Point3;
+	import isohill.State;
 	import starling.display.MovieClip;
 	import starling.textures.Texture;
 	import starling.textures.TextureSmoothing;
@@ -83,7 +84,7 @@ package isohill.tmx
 				var pt3:Point3 = grid.toLayerPt(cellX, cellY);
 				var name:String = tmx.getImgSrc(_cell) + "_" + (iSprite++);
 				var assetID:String = tmx.getImgSrc(_cell);
-				var sprite:IsoMovieClip = new IsoMovieClip(assetID, name, pt3);//IsoSprite = new IsoSprite(assetID, name, pt3);
+				var sprite:IsoMovieClip = new IsoMovieClip(assetID, name, pt3, new State("", 0, 0, true));//IsoSprite = new IsoSprite(assetID, name, pt3);
 				sprite.currentFrame = tmx.getImgFrame(_cell);
 				
 				grid.add(sprite);

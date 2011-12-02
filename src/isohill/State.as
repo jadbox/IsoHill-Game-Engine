@@ -36,7 +36,11 @@ package isohill
 		 * end time of the state (-1 for no end)
 		 */
 		public var end:int;
-		
+		/**
+		 * Collision flag
+		 */
+		public var collidable:Boolean = false;
+		 
 		/**
 		 * Constructor 
 		 * @param name  name of the state
@@ -44,11 +48,12 @@ package isohill
 		 * @param end end time of the state (-1 for no end)
 		 * 
 		 */
-		public function State(name:String="", start:int = 0, end:int = 0) 
+		public function State(name:String="", start:int = 0, end:int = 0, collidable:Boolean=false) 
 		{
 			this.name = name;
 			this.start = start;
 			this.end = end;
+			this.collidable = collidable;
 		}
 		
 	}

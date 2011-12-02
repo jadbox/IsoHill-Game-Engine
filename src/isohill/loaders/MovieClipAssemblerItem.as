@@ -11,12 +11,16 @@ package isohill.loaders
 {
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
+	import flash.display.InteractiveObject;
+	import flash.display.Loader;
 	import flash.display.MovieClip;
 	import flash.filters.BitmapFilter;
 	import flash.filters.BlurFilter;
 	import flash.filters.ColorMatrixFilter;
 	import flash.geom.Matrix;
 	import flash.utils.Dictionary;
+	import isohill.utils.DynamicMovieClip;
+	import isohill.utils.StringUtils;
 	/**
 	 * Items for MovieClipAssembler that specifies how items should be loaded and assembled
 	 * @author Jonathan Dunlap
@@ -100,9 +104,44 @@ package isohill.loaders
 		public function load(onLoaderCallback:Function):void 
 		{
 			this.onLoaderCallback = onLoaderCallback;
-			if (this.mc) onLoad(mc);
+			if (this.mc) onLoad(mc); // is already loaded or ready
+			else if (processMultipleFiles(file)) getFrameFiles(file, onLoad);
 			else ImgLoader.instance.getMovieClip(file, linkage, onLoad);
 		}
+		/* PROCESS IMAGE SEQUENCE (file="apples001.jpg...apples050.jpg") */
+		private function processMultipleFiles(file:String):Boolean {
+			return file.indexOf("...") != -1;
+		}
+		private function getFilesArray(fileDirective:String):Array {
+			var split:Array = fileDirective.split("...");
+			if (split.length > 2) throw new Error("Cannot have multple ... file directives: "+fileDirective);
+			var start:String = split[0];
+			var end:String = split[1];
+			if (start == end) return [start];
+			var startMatch:Array = start.match(/[0-9]+/);
+			if (startMatch == null || startMatch.length == 0) throw new Error("Could not find file numbers in starting file: " + start);
+			var endMatch:Array = end.match(/[0-9]+/);
+			if (endMatch == null || endMatch.length == 0) throw new Error("Could not find file numbers in ending file: " + end);
+			var startNum:int = int(startMatch[0]);
+			var endNum:int = int(endMatch[0]);
+			var files:Array = [];
+			for (var i:int = startNum; i <= endNum; i++) {
+				files.push( end.replace(endNum, StringUtils.padIntWithLeadingZeros(i, endNum.toString().length) ) );
+			}
+			return files;
+		}
+		
+		private function getFrameFiles(fileDirective:String, onLoad:Function):void {
+			var dMC:DynamicMovieClip = new DynamicMovieClip();
+			var files:Array = getFilesArray(fileDirective);
+			
+			var loaded:int = 0;
+			var onFrameLoad:Function = function(loader:Loader):void { if (++loaded == files.length) onLoad(dMC); }
+			for (var i:int = 0; i < files.length; i++) {
+				dMC.addToFrame(i, ImgLoader.instance.getLoader(files[i], onFrameLoad));
+			}
+		}
+		/* ------------------ */
 		private function onLoad(mc:MovieClip):void {
 			mc.x = x;
 			mc.y = y;

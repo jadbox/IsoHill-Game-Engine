@@ -48,7 +48,7 @@ package isohill.loaders
 		}
 		/** @inheritDoc */
 		public function getDisplay():DisplayObject {
-			if(proxyTexture==null) proxyTexture = Texture.empty(1,1);
+			if(proxyTexture==null) proxyTexture = Texture.empty(15, 15, 0x25ff0000);
 			return new HitImage(proxyTexture);
 		}		
 		private function onLoad(bd:BitmapData):void {

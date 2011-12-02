@@ -53,7 +53,7 @@ package isohill.loaders
 		}
 		/** @inheritDoc */
 		public function getDisplay():DisplayObject {
-			if(proxyTexture==null) proxyTexture = new <Texture>[Texture.empty(22, 22, 0xff990000)];
+			if(proxyTexture==null) proxyTexture = new <Texture>[Texture.empty(15, 15, 0x25ff0000)];
 			return new HitMovieClip(proxyTexture);
 		}
 		/** @inheritDoc */

@@ -35,8 +35,8 @@ package isohill.components
 		}
 		public function onSetup(sprite:IsoDisplay):void {
 			this.sprite = sprite;
-			sprite.display = AssetManager.instance.getImage(assetManagerKey);
-			//trace("setup " + i);
+			if(!sprite.display) sprite.display = AssetManager.instance.getImage(assetManagerKey);
+			advanceTime(0);
 		}
 		public function onRemove():void {
 		}
