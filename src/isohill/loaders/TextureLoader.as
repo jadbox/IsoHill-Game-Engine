@@ -21,6 +21,7 @@ package isohill.loaders
 	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.textures.Texture;
+	import starling.textures.TextureSmoothing;
 	/**
 	 * Loads one texture for one frame
 	 * @author Jonathan Dunlap
@@ -48,8 +49,10 @@ package isohill.loaders
 		}
 		/** @inheritDoc */
 		public function getDisplay():DisplayObject {
-			if(proxyTexture==null) proxyTexture = Texture.empty(15, 15, 0x25ff0000);
-			return new HitImage(proxyTexture);
+			if (proxyTexture == null) proxyTexture = Texture.empty(15, 15, 0x25ff0000);
+			var image:HitImage = new HitImage(proxyTexture);
+			image.smoothing = TextureSmoothing.NONE;
+			return image;
 		}		
 		private function onLoad(bd:BitmapData):void {
 			texture = Texture.fromBitmapData(bd);

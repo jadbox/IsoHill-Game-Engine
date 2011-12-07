@@ -22,6 +22,7 @@ package isohill.loaders
 	import starling.display.Image;
 	import isohill.starling.HitMovieClip;
 	import starling.textures.Texture;
+	import starling.textures.TextureSmoothing;
 	/**
 	 * Loads a spritesheet Texture image and cuts out Textures for each sprite
 	 * @author Jonathan Dunlap
@@ -54,7 +55,9 @@ package isohill.loaders
 		/** @inheritDoc */
 		public function getDisplay():DisplayObject {
 			if(proxyTexture==null) proxyTexture = new <Texture>[Texture.empty(15, 15, 0x25ff0000)];
-			return new HitMovieClip(proxyTexture);
+			var mc:HitMovieClip = new HitMovieClip(proxyTexture);
+			mc.smoothing = TextureSmoothing.NONE;
+			return mc;
 		}
 		/** @inheritDoc */
 		public function load():void {
@@ -67,7 +70,8 @@ package isohill.loaders
 			textures = new <Texture>[];
 			
 			for each (var frame:Rectangle in frames) {
-				textures.push( Texture.fromTexture(bigTexture, frame) );
+				var texture:Texture = Texture.fromTexture(bigTexture, frame);
+				textures.push( texture );
 				if (hitMap != null) hitMap.push(GridBool.fromBitMapDataAlpha(bd, frame));
 				i++;
 			}
