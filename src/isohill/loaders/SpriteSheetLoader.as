@@ -49,7 +49,7 @@ package isohill.loaders
 			this.url = url;
 			this.frames = frames;
 			this.offset = offset?offset:new Point();
-			if(hitMapTest) hitMap = new <GridBool>[];
+			if(hitMapTest) hitMap = new Vector.<GridBool>();
 		}
 		/** @inheritDoc */
 		public function getDisplay():DisplayObject {

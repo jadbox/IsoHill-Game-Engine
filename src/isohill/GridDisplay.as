@@ -32,6 +32,13 @@ package isohill
 		private var h:int = 0;
 		private var tileWidth:int = 1;
 		private var tileHeight:int = 1;
+		
+		private var tileWidthOffset:int = 1;
+		
+		private var tileHeightOffset:int = 1;
+		
+		private var sqEdgeSize:Number;
+		
 		private var projection:IProjection;
 		private var ratio:Point = new Point(1, 1); //movement ratio for parallax
 		private var spriteHash:Dictionary = new Dictionary(true); // sprite name -> IsoDisplay
@@ -62,19 +69,26 @@ package isohill
 		 * @param projection IProjection class to project an <code>IsoDisplay</code> element from it's point location to screen space. Default of null uses IsoProjection.
 		 * 
 		 */		
-		public function GridDisplay(name:String, w:int, h:int, cellwidth:int, cellheight:int, projection:IProjection=null) 
+		public function GridDisplay(name:String, w:int, h:int, cellwidth:Number, cellheight:Number, projectionType:String) 
 		{
 			this.name = name;
 			this.w = w;
 			this.h = h;
 			this.tileWidth = cellwidth;
 			this.tileHeight = cellheight;
+			tileWidthOffset = tileWidth - 2;
+			tileHeightOffset = tileHeight - 2;
+			
+			sqEdgeSize = tileHeightOffset;
+			
 			display = new Sprite();
-			data = new Vector.<Vector.<IsoDisplay>>(w * h + 1, true);
+			data = new Vector.<Vector.<IsoDisplay>>(w * h, true);
 			flatData = new <IsoDisplay>[];
 			
-			this.projection = projection == null?new IsoProjection():projection;
+			this.projection = new IsoProjection(projectionType, cellwidth, cellheight);
 			this.projection.onSetup(this);
+			
+			trace(tileWidth, tileHeight);
 		}
 		/**
 		 * Get an <code>IsoDisplay</code> element by its name 
@@ -125,26 +139,6 @@ package isohill
 		public function offset(x:Number, y:Number):void {
 			display.x += x * ratio.x;
 			display.y += y * ratio.y;
-		}
-		/**
-		 * Get the screen x,y location from this layer's point location 
-		 * @param pt Layer location to convert to
-		 * @return screen point location
-		 * 
-		 */		
-		public function layerToScreen(pt:Point3):Point {
-			var answer:Point = projection.layerToScreen(pt);
-			return display.localToGlobal(answer);
-		}
-		/**
-		 * Get this layer's point location from a screen point location 
-		 * @param pt screen point location
-		 * @return Layer location to convert to
-		 * 
-		 */		
-		public function screenToLayer(pt:Point):Point3 {
-			pt = display.globalToLocal(pt);
-			return projection.screenToLayer(pt);
 		}
 		/**
 		 * Returns the number of <code>IsoDisplay</code> children in the grid
@@ -208,10 +202,10 @@ package isohill
 		 * 
 		 */
 		public function getCell(x:int, y:int):Vector.<IsoDisplay> {
-			if (x > w) x = w-1; // inlined bound checking for speed
-			else if (x < 1) x = 1;
-			if (y > h) y = h - 1;
-			else if (y < 1) y = 1;
+			if (x >= w) x = w-1; // inlined bound checking for speed
+			else if (x < 0) x = 0;
+			if (y >= h) y = h - 1;
+			else if (y < 0) y = 0;
 			
 			var index:int = (y*w)+x;
 			return data[index];
@@ -225,8 +219,7 @@ package isohill
 		 * 
 		 */
 		public function toLayerPt(x:int, y:int, z:int = 1):Point3 {
-			x++; y++;
-			return new Point3(x * (tileHeight-1), y * (tileHeight-1), z);
+			return new Point3(x * sqEdgeSize, y * sqEdgeSize, z);
 		}
 		// 
 		/**
@@ -237,19 +230,42 @@ package isohill
 		 * 
 		 */		
 		public function fromLayerPt(x:Number, y:Number):Point {
-			return new Point(Math.floor(x / (tileHeight-1))+1, Math.floor(y / (tileHeight-1))+1);
+			var pt:Point = new Point(	Math.floor(x / sqEdgeSize), 
+										Math.floor(y / sqEdgeSize)	);
+			return pt;
+		}
+		/**
+		 * Get the screen x,y location from this layer's point location 
+		 * @param pt Layer location to convert to
+		 * @return screen point location
+		 * 
+		 */		
+		public function layerToScreen(pt:Point3):Point {
+			var answer:Point = projection.layerToScreen(pt);
+			return display.localToGlobal(answer);
+		}
+		/**
+		 * Get this layer's point location from a screen point location 
+		 * @param pt screen point location
+		 * @return Layer location to convert to
+		 * 
+		 */		
+		public function screenToLayer(pt:Point):Point3 {
+			var localPt:Point = display.globalToLocal(pt);
+			var pt3:Point3 = projection.screenToLayer(localPt);
+			//trace("screenToLayer ", pt, localPt, pt3);
+			return pt3;
 		}
 		private function updateLocation(val:IsoDisplay):void {
-			var x:int = Math.floor(val.pt.x / tileHeight);
-			var y:int = Math.floor(val.pt.y / tileHeight);
+			var x:int = Math.floor(val.pt.x / sqEdgeSize);
+			var y:int = Math.floor(val.pt.y / sqEdgeSize);
 			if (x >= w) x = w-1; // inlined bound checking for speed
-			else if (x < 1) x = 1;
+			else if (x < 0) x = 0;
 			if (y >= h) y = h - 1;
-			else if (y < 1) y = 1;
+			else if (y < 0) y = 0;
 			
 			var index:int = (y * w) + x;
 			if (index == val.layerIndex) return; // no change needed
-			//trace(x, y);
 			removeFromGridData(val);
 			
 			var collection:Vector.<IsoDisplay> = data[index];

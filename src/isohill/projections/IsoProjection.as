@@ -38,25 +38,37 @@ package isohill.projections
 		 * @param yScale the compression of the y axis (usally .5)
 		 * 
 		 */
-		public function IsoProjection(type:String = "isometric", xScale:Number = 1, yScale:Number = .5) 
+		public function IsoProjection(type:String, cellWidth:Number, cellHeight:Number) 
 		{
+
 			pt = new Point();
 			projection = new Matrix();
 			
-			var scale:Number = 1;
+			var scale:Number = 1;		
+			var length:Number = Math.sqrt(cellWidth * cellWidth + cellHeight * cellHeight);
+		
+			
 			
 			if (type == TYPE_ISOMETRIC) {
 				projection.rotate(45 * (Math.PI / 180) );
 				scale = 1.4;
+				projection.scale(scale * 1, scale * .5);
 			}
 			else if (type == TYPE_ORTHOGONAL) {
 				projection.rotate(0);
 				scale = 1.24;
+				projection.scale(scale * 1, scale * 1);
 			}
 			else throw new Error("Invalid projection type: " + type);
-			projection.scale(scale * xScale, scale * yScale);
+			
+			
+			//var sx:Number = cellWidth / length;
+			//var sy:Number = cellHeight / length;
+			//projection.scale(sx, sy);
+			//trace("t", cellWidth, cellHeight, length, "sx:" + sx, "sy:"+sy);
 			projectionInverse = (projection.clone());
 			projectionInverse.invert();
+			projection.translate(-cellHeight, cellHeight);
 		}
 		public function onSetup(grid:GridDisplay):void {
 		
@@ -76,6 +88,7 @@ package isohill.projections
 		}
 		public function screenToLayer(pt:Point):Point3 {
 			var pt:Point = projectionInverse.transformPoint(pt);
+			//trace("s", pt);
 			return new Point3(pt.x, pt.y);
 		}
 	}

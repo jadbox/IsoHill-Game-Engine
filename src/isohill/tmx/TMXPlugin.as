@@ -71,7 +71,8 @@ package isohill.tmx
 		}
 		private function loadTiles():void {
 			for each(var tile:TMXTileset in tmx.uniqueTilesets) {
-				AssetManager.instance.addLoader(new SpriteSheetLoader(tmx.getImgSrc(tile.firstgid), tile.areas));
+				var loader:SpriteSheetLoader = new SpriteSheetLoader(tmx.getImgSrc(tile.firstgid), tile.areas);
+				AssetManager.instance.addLoader(loader);
 			}
 		}
 		private function makeSprites(cellX:int, cellY:int):void {
@@ -120,7 +121,7 @@ package isohill.tmx
 		 */
 		public function makeEmptyGridOfSize(tmxLayerIndex:int, name:String):GridDisplay {
 			
-			var layer:GridDisplay = new GridDisplay(name, tmx.width, tmx.height, tmx.tileWidth, tmx.tileHeight, new IsoProjection(tmx.orientation, 1, tmx.tileHeight / tmx.tileWidth));
+			var layer:GridDisplay = new GridDisplay(name, tmx.width, tmx.height, tmx.tileWidth, tmx.tileHeight, tmx.orientation);
 			for (var i:int = 0; i <= tmxLayerIndex; i++) {
 				if (i == linkedLayer.length) linkedLayer.push(null);
 			}

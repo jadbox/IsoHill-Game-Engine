@@ -12,30 +12,33 @@ package isohill
 	import flash.display.BitmapData;
 	import flash.geom.Rectangle;
 	/**
+	 * (WIP class)
 	 * Fixed two directional Boolean vector 
 	 * + using single vector math for performance
 	 * @author Jonathan Dunlap
 	 */
 	public class GridBool
 	{
-		private var data:Vector.<Boolean>;
-		private var width:int=0;
-		private var height:int=0;
+		private var data:Vector.<uint>;
+		private var _width:int=0;
+		private var _height:int=0;
 		/**
 		 * Constructor 
 		 * @param width The width bounds of the grid
 		 * @param height the height bounds of the grid
 		 * 
 		 */		
-		public function GridBool(width:int, height:int) 
+		public function GridBool(gridWidth:int, gridHeight:int) 
 		{
-			this.width = width;
-			this.height = height;
-			if (width == 0 && height == 0) throw new Error("Invalid starting size of 0,0");
-			width = Math.max(width, 1); // ensure that it's not zero as an example of 0 width times 1 height would be zero
-			height = Math.max(height, 1); // same here
-			data = new Vector.<Boolean>(width * height, true); // make a prefined fixed sized array for performance
+			_width = gridWidth;
+			_height = gridHeight;
+			if (gridWidth == 0 || gridHeight == 0) throw new Error("Invalid starting size of 0,0");
+			_width = Math.max(gridWidth, 1); // ensure that it's not zero as an example of 0 width times 1 height would be zero
+			_height = Math.max(gridHeight, 1); // same here
+			//data = new Vector.<Boolean>(gridWidth * gridHeight, true); // make a prefined fixed sized array for performance
 		}
+		public function get width():int { return _width; }
+		public function get height():int { return _height; }
 		/**
 		 * Returns the value from a specific cell location 
 		 * @param x Cell x location
@@ -46,7 +49,10 @@ package isohill
 		public function getCell(x:int, y:int):Boolean {
 			var index:int = y * width + x; // get the index of the single array for the grid position
 			if (index >= data.length) return false;
-			return data[index];
+			
+			var alpha:uint = data[index] >> 24 & 0xFF;
+			var flag:Boolean = (alpha > 0);
+			return flag;
 		}
 		/**
 		 * Sets the cell value at a specific location 
@@ -56,9 +62,12 @@ package isohill
 		 * @return Resulting value of the cell
 		 * 
 		 */		
-		public function setCell(x:int, y:int, value:Boolean):Boolean {
+		public function setCell(x:int, y:int, value:uint):uint {
 			var index:int = y * width + x; // get the index of the single array for the grid position
 			return data[index] = value;
+		}
+		public function setGrid(data:Vector.<uint>):void {
+			this.data = data;
 		}
 		/**
 		 * Pretty printer for the grid
@@ -83,15 +92,15 @@ package isohill
 		 * 
 		 */		
 		public static function fromBitMapDataAlpha(data:BitmapData, area:Rectangle = null):GridBool {
-			var sx:int = area?Math.floor(area.x):0;
+			/*var sx:int = area?Math.floor(area.x):0;
 			var sy:int = area?Math.floor(area.y):0;
 			var sw:int = area?Math.ceil(area.width):data.width;
 			var sh:int = area?Math.ceil(area.height):data.height;
+			*/
 
-			//var toX:int = sx+sw;
-			//var toY:int = sy+sh;
-			var result:GridBool = new GridBool(sw, sh); // correct mapping for BitmapData
-
+			var result:GridBool = new GridBool(data.width, data.height); // correct mapping for BitmapData
+			result.setGrid(data.getVector(data.rect));
+			/*
 			var hadTransparency:Boolean = false; // flag if there was any transparency in the frame
 			for (var x:int = 1; x < sw; x++) {
 				for (var y:int = 1; y < sh; y++) {
@@ -105,6 +114,7 @@ package isohill
 			if (hadTransparency == false) { 
 				result = null; data = null;
 			}
+			*/
 			return result;
 		}
 	}

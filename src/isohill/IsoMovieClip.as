@@ -35,7 +35,7 @@ package isohill
 			super(id, name, pt, state);
 			_display.stop();
 			frameCallbacks = new Dictionary();
-			frameCallbacks[-100] = []; // onComplete callback token
+			frameCallbacks[-1] = []; // onComplete callback token
 		}
 		/** @inheritDoc */
 		public override function get display():DisplayObject {
@@ -154,7 +154,7 @@ package isohill
 		 * @param callback On target frame, callback is called with IsoMovieClip reference
 		 */
 		public function addLastFrameCallback(callback:Function):void {
-			frameCallbacks[-100].push(callback);
+			frameCallbacks[-1].push(callback);
 		}
 		/** @inheritDoc */
 		override public function remove():void {
@@ -184,7 +184,7 @@ package isohill
 				if (frameCallbacks[currentFrame] )
 					for each(cb in frameCallbacks[currentFrame]) cb(this);
 				if (currentFrame == numFrames-1)
-					for each(cb in frameCallbacks[ -100]) cb(this);
+					for each(cb in frameCallbacks[ -1]) cb(this);
 			}
 		}
 	}

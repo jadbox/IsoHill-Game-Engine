@@ -16,6 +16,8 @@ package isohill.loaders
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.text.GridFitType;
+	import isohill.GridBool;
 	import isohill.GridBool;
 	import isohill.IsoDisplay;
 	import isohill.AssetManager;
