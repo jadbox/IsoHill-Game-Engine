@@ -27,50 +27,28 @@ package starling.textures
         private var mClipping:Rectangle;
         private var mRootClipping:Rectangle;
         
+        /** Helper object. */
+        private static var sTexCoords:Point = new Point();
+        
         /** Creates a new subtexture containing the specified region (in pixels) of a parent 
          *  texture. */
         public function SubTexture(parentTexture:Texture, region:Rectangle)
         {
             mParent = parentTexture;
-            this.clipping = new Rectangle(region.x / parentTexture.width,
-                                          region.y / parentTexture.height,
-                                          region.width / parentTexture.width,
-                                          region.height / parentTexture.height);
+            
+            if (region == null) setClipping(new Rectangle(0, 0, 1, 1));
+            else setClipping(new Rectangle(region.x / parentTexture.width,
+                                           region.y / parentTexture.height,
+                                           region.width / parentTexture.width,
+                                           region.height / parentTexture.height));
         }
         
-        /** @inheritDoc */
-        public override function adjustVertexData(vertexData:VertexData):VertexData
+        private function setClipping(value:Rectangle):void
         {
-            var newData:VertexData = super.adjustVertexData(vertexData);
-            var numVertices:int = vertexData.numVertices;
-            
-            var clipX:Number = mRootClipping.x;
-            var clipY:Number = mRootClipping.y;
-            var clipWidth:Number  = mRootClipping.width;
-            var clipHeight:Number = mRootClipping.height;
-            
-            for (var i:int=0; i<numVertices; ++i)
-            {
-                var texCoords:Point = vertexData.getTexCoords(i);
-                newData.setTexCoords(i, clipX + texCoords.x * clipWidth,
-                                        clipY + texCoords.y * clipHeight);
-            }
-            
-            return newData;
-        }
-        
-        /** The texture which the subtexture is based on. */ 
-        public function get parent():Texture { return mParent; }
-        
-        /** The clipping rectangle, which is the region provided on initialization 
-         *  scaled into [0.0, 1.0]. */
-        public function get clipping():Rectangle { return mClipping.clone(); }
-        public function set clipping(value:Rectangle):void
-        {
-            mClipping = value.clone();
+            mClipping = value;
             mRootClipping = value.clone();
             
-            var parentTexture:SubTexture = mParent as SubTexture;            
+            var parentTexture:SubTexture = mParent as SubTexture;
             while (parentTexture)
             {
                 var parentClipping:Rectangle = parentTexture.mClipping;
@@ -81,6 +59,32 @@ package starling.textures
                 parentTexture = parentTexture.mParent as SubTexture;
             }
         }
+        
+        /** @inheritDoc */
+        public override function adjustVertexData(vertexData:VertexData, vertexID:int, count:int):void
+        {
+            super.adjustVertexData(vertexData, vertexID, count);
+            
+            var clipX:Number = mRootClipping.x;
+            var clipY:Number = mRootClipping.y;
+            var clipWidth:Number  = mRootClipping.width;
+            var clipHeight:Number = mRootClipping.height;
+            var endIndex:int = vertexID + count;
+            
+            for (var i:int=vertexID; i<endIndex; ++i)
+            {
+                vertexData.getTexCoords(i, sTexCoords);
+                vertexData.setTexCoords(i, clipX + sTexCoords.x * clipWidth,
+                                           clipY + sTexCoords.y * clipHeight);
+            }
+        }
+        
+        /** The texture which the subtexture is based on. */ 
+        public function get parent():Texture { return mParent; }
+        
+        /** The clipping rectangle, which is the region provided on initialization 
+         *  scaled into [0.0, 1.0]. */
+        public function get clipping():Rectangle { return mClipping.clone(); }
         
         /** @inheritDoc */
         public override function get base():TextureBase { return mParent.base; }

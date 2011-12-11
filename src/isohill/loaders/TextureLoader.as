@@ -56,7 +56,8 @@ package isohill.loaders
 		}		
 		private function onLoad(bd:BitmapData):void {
 			texture = Texture.fromBitmapData(bd);
-			if(hitMapTest) hitMap = GridBool.fromBitMapDataAlpha(bd);
+			if (hitMapTest) hitMap = GridBool.fromBitMapDataAlpha(bd);
+			bd.dispose();
 		}
 		/** @inheritDoc */
 		public function setTexture(sprite:IsoDisplay):void {

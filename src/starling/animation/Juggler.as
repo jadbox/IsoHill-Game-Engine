@@ -10,11 +10,6 @@
 
 package starling.animation
 {
-    import flash.display.DisplayObject;
-    import flash.display.Sprite;
-    import flash.events.Event;
-    import flash.utils.getTimer;
-    
     /** The Juggler takes objects that implement IAnimatable (like Tweens) and executes them.
      * 
      *  <p>A juggler is a simple object. It does no more than saving a list of objects implementing 
@@ -47,15 +42,14 @@ package starling.animation
      */
     public class Juggler implements IAnimatable
     {
-        private var mObjects:Array;
-        private var mElapsedTime:Number;        
-        private var mDisplayObject:DisplayObject;
+        private var mObjects:Vector.<IAnimatable>;
+        private var mElapsedTime:Number;
         
         /** Create an empty juggler. */
         public function Juggler()
         {
             mElapsedTime = 0;
-            mObjects = [];
+            mObjects = new <IAnimatable>[];
         }
 
         /** Adds an object to the juggler. */
@@ -67,31 +61,32 @@ package starling.animation
         /** Removes an object from the juggler. */
         public function remove(object:IAnimatable):void
         {
-            mObjects = mObjects.filter(
-                function(currentObject:Object, index:int, array:Array):Boolean
-                {
-                    return object != currentObject;
-                });
+            if (object == null) return;
+            var numObjects:int = mObjects.length;
+            
+            for (var i:int=numObjects-1; i>=0; --i)
+                if (mObjects[i] == object) 
+                    mObjects.splice(i, 1);
         }
         
         /** Removes all tweens with a certain target. */
         public function removeTweens(target:Object):void
         {
             if (target == null) return;
+            var numObjects:int = mObjects.length;
             
-            mObjects = mObjects.filter(
-                function(currentObject:Object, index:int, array:Array):Boolean
-                {
-                    var tween:Tween = currentObject as Tween;
-                    if (tween && tween.target == target) return false;
-                    else return true;
-                });
+            for (var i:int=numObjects-1; i>=0; --i)
+            {
+                var tween:Tween = mObjects[i] as Tween;
+                if (tween && tween.target == target)
+                    mObjects.splice(i, 1);
+            }
         }
         
         /** Removes all objects at once. */
         public function purge():void
         {
-            mObjects = [];
+            mObjects.length = 0;
         }
         
         /** Delays the execution of a function until a certain time has passed. Creates an
@@ -106,24 +101,26 @@ package starling.animation
             return delayedCall;
         }
         
-        /** Advanced all objects by a certain time (in seconds). Objects with a positive 
+        /** Advances all objects by a certain time (in seconds). Objects with a positive
          *  'isComplete'-property will be removed. */
         public function advanceTime(time:Number):void
         {                        
             mElapsedTime += time;
-            var objectCopy:Array = mObjects.concat();
+            if (mObjects.length == 0) return;
+            
+            var i:int;
+            var numObjects:int = mObjects.length;
+            var objectCopy:Vector.<IAnimatable> = mObjects.concat();
             
             // since 'advanceTime' could modify the juggler (through a callback), we split
             // the logic in two loops.
             
-            for each (var currentObject:IAnimatable in objectCopy)            
-                currentObject.advanceTime(time);  
+            for (i=0; i<numObjects; ++i)
+                objectCopy[i].advanceTime(time);
             
-            mObjects = mObjects.filter(
-                function(object:IAnimatable, index:int, array:Array):Boolean
-                {
-                    return !object.isComplete;
-                });
+            for (i=mObjects.length-1; i>=0; --i)
+                if (mObjects[i].isComplete) 
+                    mObjects.splice(i, 1);
         }
         
         /** Always returns 'false'. */

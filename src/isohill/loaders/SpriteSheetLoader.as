@@ -75,7 +75,7 @@ package isohill.loaders
 				if (hitMap != null) hitMap.push(GridBool.fromBitMapDataAlpha(bd, frame));
 				i++;
 			}
-			
+			bd.dispose();
 		}
 		/** @inheritDoc */
 		public function get id():String { return url; }

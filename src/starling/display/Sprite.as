@@ -10,6 +10,7 @@
 
 package starling.display
 {
+    import starling.core.QuadBatch;
     import starling.core.RenderSupport;
     import starling.events.Event;
 
@@ -36,7 +37,7 @@ package starling.display
      */  
     public class Sprite extends DisplayObjectContainer
     {
-        private var mFlattenedContents:Vector.<QuadGroup>;
+        private var mFlattenedContents:Vector.<QuadBatch>;
         
         /** Creates an empty sprite. */
         public function Sprite()
@@ -56,18 +57,25 @@ package starling.display
          *  either call <code>flatten</code> again, or <code>unflatten</code> the sprite. */
         public function flatten():void
         {
-            unflatten();
             dispatchEventOnChildren(new Event(Event.FLATTEN));
-            mFlattenedContents = QuadGroup.compile(this);
+            
+            if (mFlattenedContents == null) mFlattenedContents = new <QuadBatch>[];
+            QuadBatch.compile(this, mFlattenedContents);
         }
         
         /** Removes the rendering optimizations that were created when flattening the sprite.
          *  Changes to the sprite's children will become immediately visible again. */ 
         public function unflatten():void
         {
-            for each (var quadGroup:QuadGroup in mFlattenedContents)
-                quadGroup.dispose();
-            mFlattenedContents = null;
+            if (mFlattenedContents)
+            {
+                var numBatches:int = mFlattenedContents.length;
+                
+                for (var i:int=0; i<numBatches; ++i)
+                    mFlattenedContents[i].dispose();
+                
+                mFlattenedContents = null;
+            }
         }
         
         /** Indicates if the sprite was flattened. */
@@ -78,8 +86,13 @@ package starling.display
         {
             if (mFlattenedContents)
             {
-                for each (var quadGroup:QuadGroup in mFlattenedContents)
-                    quadGroup.render(support, this.alpha * alpha);
+                support.finishQuadBatch();
+                
+                alpha *= this.alpha;
+                var numBatches:int = mFlattenedContents.length;
+                
+                for (var i:int=0; i<numBatches; ++i)
+                    mFlattenedContents[i].render(support.mvpMatrix, alpha);
             }
             else super.render(support, alpha);
         }

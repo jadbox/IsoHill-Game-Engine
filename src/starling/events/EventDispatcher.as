@@ -92,15 +92,19 @@ package starling.events
             if (previousTarget == null || event.currentTarget != null) event.setTarget(this);
             
             var stopImmediatePropagation:Boolean = false;
-            if (listeners != null && listeners.length != 0)
+            var numListeners:int = listeners == null ? 0 : listeners.length;
+            
+            if (numListeners != 0)
             {
                 event.setCurrentTarget(this);
                 
                 // we can enumerate directly over the vector, since "add"- and "removeEventListener" 
                 // won't change it, but instead always create a new vector.
-                for each (var listener:Function in listeners)
+                
+                for (var i:int=0; i<numListeners; ++i)
                 {
-                    listener(event);
+                    listeners[i](event);
+                    
                     if (event.stopsImmediatePropagation)
                     {
                         stopImmediatePropagation = true;
@@ -127,7 +131,7 @@ package starling.events
         /** Returns if there are listeners registered for a certain event type. */
         public function hasEventListener(type:String):Boolean
         {
-            return mEventListeners != null && mEventListeners[type] != null;
+            return mEventListeners != null && type in mEventListeners;
         }
     }
 }

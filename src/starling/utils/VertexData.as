@@ -56,25 +56,58 @@ package starling.utils
         /** The offset of texture coordinate (u, v) within a vertex. */
         public static const TEXCOORD_OFFSET:int = 7;
         
-        private var mData:Vector.<Number>;
+        private var mRawData:Vector.<Number>;
         private var mPremultipliedAlpha:Boolean;
+        private var mNumVertices:int;
+
+        /** Helper object. */
+        private static var sPositions:Vector.<Number> = new Vector.<Number>(12, true);
         
         /** Create a new VertexData object with a specified number of vertices. */
         public function VertexData(numVertices:int, premultipliedAlpha:Boolean=false)
         {            
-            mData = new Vector.<Number>(numVertices * ELEMENTS_PER_VERTEX, true);
+            mRawData = new Vector.<Number>(numVertices * ELEMENTS_PER_VERTEX, true);
             mPremultipliedAlpha = premultipliedAlpha;
-        }        
+            mNumVertices = numVertices;
+        }
+
+        /** Creates a duplicate of the vertex data object. */
+        public function clone():VertexData
+        {
+            var clone:VertexData = new VertexData(0, mPremultipliedAlpha);
+            clone.mRawData = mRawData.concat();
+            clone.mRawData.fixed = true;
+            clone.mNumVertices = mNumVertices;
+            return clone;
+        }
+        
+        /** Copies the vertex data of this instance to another vertex data object,
+         *  starting at a certain index. */
+        public function copyTo(targetData:VertexData, targetVertexID:int=0):void
+        {
+            // todo: check/convert pma
+            
+            var targetRawData:Vector.<Number> = targetData.mRawData;
+            var dataLength:int = mNumVertices * ELEMENTS_PER_VERTEX;
+            var targetStartIndex:int = targetVertexID * ELEMENTS_PER_VERTEX;
+            
+            for (var i:int=0; i<dataLength; ++i)
+                targetRawData[int(targetStartIndex+i)] = mRawData[i];
+        }
         
         /** Appends the vertices from another VertexData object. */
         public function append(data:VertexData):void
         {
-            mData.fixed = false;
+            mRawData.fixed = false;
             
-            for each (var element:Number in data.mData)
-                mData.push(element);
+            var rawData:Vector.<Number> = data.mRawData;
+            var rawDataLength:int = rawData.length;
+            
+            for (var i:int=0; i<rawDataLength; ++i)
+                mRawData.push(rawData[i]);
                 
-            mData.fixed = true;
+            mNumVertices += data.numVertices;
+            mRawData.fixed = true;
         }
         
         // functions
@@ -82,39 +115,44 @@ package starling.utils
         /** Updates the position values of a vertex. */
         public function setPosition(vertexID:int, x:Number, y:Number, z:Number=0.0):void
         {
-            setValues(getOffset(vertexID) + POSITION_OFFSET, x, y, z);
+            var offset:int = getOffset(vertexID) + POSITION_OFFSET;
+            mRawData[offset] = x;
+            mRawData[int(offset+1)] = y;
+            mRawData[int(offset+2)] = z;
         }
         
         /** Returns the position of a vertex. */
-        public function getPosition(vertexID:int):Vector3D
+        public function getPosition(vertexID:int, position:Vector3D):void
         {
             var offset:int = getOffset(vertexID) + POSITION_OFFSET;
-            return new Vector3D(mData[offset], mData[offset+1], mData[offset+2]);
+            position.x = mRawData[offset];
+            position.y = mRawData[int(offset+1)];
+            position.z = mRawData[int(offset+2)];
         }
         
         /** Updates the color and alpha values of a vertex. */ 
         public function setColor(vertexID:int, color:uint, alpha:Number=1.0):void
         {
             var multiplier:Number = mPremultipliedAlpha ? alpha : 1.0;
-            setValues(getOffset(vertexID) + COLOR_OFFSET, 
-                      Color.getRed(color)   / 255.0 * multiplier,
-                      Color.getGreen(color) / 255.0 * multiplier,
-                      Color.getBlue(color)  / 255.0 * multiplier,
-                      alpha);
+            var offset:int = getOffset(vertexID) + COLOR_OFFSET;
+            mRawData[offset]        = Color.getRed(color)   / 255.0 * multiplier;
+            mRawData[int(offset+1)] = Color.getGreen(color) / 255.0 * multiplier;
+            mRawData[int(offset+2)] = Color.getBlue(color)  / 255.0 * multiplier;
+            mRawData[int(offset+3)] = alpha;
         }
         
         /** Returns the RGB color of a vertex (no alpha). */
         public function getColor(vertexID:int):uint
         {
             var offset:int = getOffset(vertexID) + COLOR_OFFSET;
-            var divisor:Number = mPremultipliedAlpha ? mData[offset+3] : 1.0;
+            var divisor:Number = mPremultipliedAlpha ? mRawData[offset+3] : 1.0;
             
             if (divisor == 0) return 0;
             else
             {
-                var red:Number   = mData[offset  ] / divisor;
-                var green:Number = mData[offset+1] / divisor;
-                var blue:Number  = mData[offset+2] / divisor;
+                var red:Number   = mRawData[offset]        / divisor;
+                var green:Number = mRawData[int(offset+1)] / divisor;
+                var blue:Number  = mRawData[int(offset+2)] / divisor;
                 return Color.rgb(red * 255, green * 255, blue * 255);
             }
         }
@@ -126,7 +164,7 @@ package starling.utils
             else 
             {
                 var offset:int = getOffset(vertexID) + COLOR_OFFSET + 3;
-                mData[offset] = alpha;
+                mRawData[offset] = alpha;
             }
         }
         
@@ -134,29 +172,23 @@ package starling.utils
         public function getAlpha(vertexID:int):Number
         {
             var offset:int = getOffset(vertexID) + COLOR_OFFSET + 3;
-            return mData[offset];
+            return mRawData[offset];
         }
         
         /** Updates the texture coordinates of a vertex (range 0-1). */
         public function setTexCoords(vertexID:int, u:Number, v:Number):void
         {
-            setValues(getOffset(vertexID) + TEXCOORD_OFFSET, u, v);
+            var offset:int = getOffset(vertexID) + TEXCOORD_OFFSET;
+            mRawData[offset]        = u;
+            mRawData[int(offset+1)] = v;
         }
         
         /** Returns the texture coordinates of a vertex in the range 0-1. */
-        public function getTexCoords(vertexID:int):Point
+        public function getTexCoords(vertexID:int, texCoords:Point):void
         {
             var offset:int = getOffset(vertexID) + TEXCOORD_OFFSET;
-            return new Point(mData[offset], mData[offset+1]);
-        }
-        
-        /** Creates a duplicate of the vertex data object. */
-        public function clone():VertexData
-        {
-            var clone:VertexData = new VertexData(0, mPremultipliedAlpha);
-            clone.mData = mData.concat();
-            clone.mData.fixed = true;
-            return clone;
+            texCoords.x = mRawData[offset];
+            texCoords.y = mRawData[int(offset+1)];
         }
         
         // utility functions
@@ -166,46 +198,68 @@ package starling.utils
                                         deltaX:Number, deltaY:Number, deltaZ:Number=0.0):void
         {
             var offset:int = getOffset(vertexID) + POSITION_OFFSET;
-            mData[offset]   += deltaX;
-            mData[offset+1] += deltaY;
-            mData[offset+2] += deltaZ;
+            mRawData[offset]        += deltaX;
+            mRawData[int(offset+1)] += deltaY;
+            mRawData[int(offset+2)] += deltaZ;
         }
         
         /** Transforms the position of a vertex by multiplication with a transformation matrix. */
-        public function transformVertex(vertexID:int, matrix:Matrix3D=null):void
+        public function transformVertex(vertexID:int, matrix:Matrix3D):void
         {
-            var position:Vector3D = getPosition(vertexID);
+            var offset:int = getOffset(vertexID) + POSITION_OFFSET;
+            sPositions[0] = mRawData[offset];
+            sPositions[1] = mRawData[int(offset+1)];
+            sPositions[2] = mRawData[int(offset+2)];
             
-            if (matrix)
+            matrix.transformVectors(sPositions, sPositions);
+            mRawData[offset]        = sPositions[0];
+            mRawData[int(offset+1)] = sPositions[1];
+            mRawData[int(offset+2)] = sPositions[2];
+        }
+
+        /** Transforms the position of a vertex by multiplication with a transformation matrix. */
+        public function transformQuad(vertexID:int, matrix:Matrix3D):void
+        {
+            var i:int;
+            var offset:int = getOffset(vertexID) + POSITION_OFFSET;
+            
+            for (i=0; i<4; ++i)
             {
-                var transPosition:Vector3D = matrix.transformVector(position);
-                setPosition(vertexID, transPosition.x, transPosition.y, transPosition.z);
+                sPositions[int(3*i    )] = mRawData[offset];
+                sPositions[int(3*i + 1)] = mRawData[int(offset+1)];
+                sPositions[int(3*i + 2)] = mRawData[int(offset+2)];
+                offset += ELEMENTS_PER_VERTEX;
+            }
+            
+            matrix.transformVectors(sPositions, sPositions);
+            offset -= ELEMENTS_PER_VERTEX * 4;
+            
+            for (i=0; i<4; ++i)
+            {
+                mRawData[offset]        = sPositions[int(3*i    )];
+                mRawData[int(offset+1)] = sPositions[int(3*i + 1)];
+                mRawData[int(offset+2)] = sPositions[int(3*i + 2)];
+                offset += ELEMENTS_PER_VERTEX;
             }
         }
         
         /** Sets all vertices of the object to the same color and alpha values. */
         public function setUniformColor(color:uint, alpha:Number=1.0):void
         {
-            for (var i:int=0; i<numVertices; ++i)
+            for (var i:int=0; i<mNumVertices; ++i)
                 setColor(i, color, alpha);
         }
         
         /** Multiplies the alpha value of a vertex with a certain delta. */
         public function scaleAlpha(vertexID:int, alpha:Number):void
         {
-            if (mPremultipliedAlpha) setAlpha(vertexID, getAlpha(vertexID) * alpha);
+            if (alpha == 1.0) return;
+            else if (mPremultipliedAlpha) setAlpha(vertexID, getAlpha(vertexID) * alpha);
             else
             {
                 var offset:int = getOffset(vertexID) + COLOR_OFFSET + 3;
-                mData[offset] *= alpha;
+                mRawData[offset] *= alpha;
             }
-        }
-        
-        private function setValues(offset:int, ...values):void
-        {
-            var numValues:int = values.length;
-            for (var i:int=0; i<numValues; ++i)
-                mData[offset+i] = values[i];
         }
         
         private function getOffset(vertexID:int):int
@@ -216,22 +270,26 @@ package starling.utils
         // properties
         
         /** Changes the way alpha and color values are stored. Updates all exisiting vertices. */
-        public function set premultipliedAlpha(value:Boolean):void
+        public function setPremultipliedAlpha(value:Boolean, updateData:Boolean=true):void
         {
-            if (value == mPremultipliedAlpha) return;            
-            var dataLength:int = mData.length;
+            if (value == mPremultipliedAlpha) return;
             
-            for (var i:int=COLOR_OFFSET; i<dataLength; i += ELEMENTS_PER_VERTEX)
+            if (updateData)
             {
-                var alpha:Number = mData[i+3];
-                var divisor:Number = mPremultipliedAlpha ? alpha : 1.0;
-                var multiplier:Number = value ? alpha : 1.0;
+                var dataLength:int = mNumVertices * ELEMENTS_PER_VERTEX;
                 
-                if (divisor != 0)
+                for (var i:int=COLOR_OFFSET; i<dataLength; i += ELEMENTS_PER_VERTEX)
                 {
-                    mData[i  ] = mData[i  ] / divisor * multiplier;
-                    mData[i+1] = mData[i+1] / divisor * multiplier;
-                    mData[i+2] = mData[i+2] / divisor * multiplier;
+                    var alpha:Number = mRawData[i+3];
+                    var divisor:Number = mPremultipliedAlpha ? alpha : 1.0;
+                    var multiplier:Number = value ? alpha : 1.0;
+                    
+                    if (divisor != 0)
+                    {
+                        mRawData[i]        = mRawData[i]        / divisor * multiplier;
+                        mRawData[int(i+1)] = mRawData[int(i+1)] / divisor * multiplier;
+                        mRawData[int(i+2)] = mRawData[int(i+2)] / divisor * multiplier;
+                    }
                 }
             }
             
@@ -242,9 +300,23 @@ package starling.utils
         public function get premultipliedAlpha():Boolean { return mPremultipliedAlpha; }
         
         /** The total number of vertices. */
-        public function get numVertices():int { return mData.length / ELEMENTS_PER_VERTEX; }
+        public function get numVertices():int { return mNumVertices; }
+        
+        public function set numVertices(value:int):void
+        {
+            mRawData.fixed = false;
+            
+            var delta:int = value * ELEMENTS_PER_VERTEX - mRawData.length;
+            var i:int;
+            
+            for (i=0; i<delta; ++i) mRawData.push(0.0);
+            for (i=delta; i<0; ++i) mRawData.pop();
+            
+            mNumVertices = value;
+            mRawData.fixed = true;
+        }
         
         /** The raw vertex data; not a copy! */
-        public function get data():Vector.<Number> { return mData; }
+        public function get rawData():Vector.<Number> { return mRawData; }
     }
 }

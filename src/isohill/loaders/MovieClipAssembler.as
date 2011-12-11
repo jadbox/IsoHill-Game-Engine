@@ -112,6 +112,7 @@ package isohill.loaders
 					var hitMapItem:GridBool = GridBool.fromBitMapDataAlpha(bmd);
 					hitMap.push(hitMapItem);
 				}
+				bmd.dispose();
 			}
 			return textures;
 		}

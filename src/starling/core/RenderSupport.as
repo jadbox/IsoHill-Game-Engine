@@ -12,10 +12,9 @@ package starling.core
 {
     import flash.display3D.*;
     import flash.geom.*;
-    import flash.utils.*;
-    
+
     import starling.display.*;
-    import starling.errors.*;
+    import starling.textures.Texture;
     import starling.utils.*;
 
     /** A class that contains helper methods simplifying Stage3D rendering.
@@ -29,20 +28,40 @@ package starling.core
         // members        
         
         private var mProjectionMatrix:Matrix3D;
-        private var mModelViewMatrix:Matrix3D;        
+        private var mModelViewMatrix:Matrix3D;
+        private var mMvpMatrix:Matrix3D;
         private var mMatrixStack:Vector.<Matrix3D>;
+        private var mMatrixStackSize:int;
+        
+        private var mQuadBatches:Vector.<QuadBatch>;
+        private var mCurrentQuadBatchID:int;
+        
+        /** Helper object. */
+        private static var sMatrixCoords:Vector.<Number> = new Vector.<Number>(16, true);
         
         // construction
         
         /** Creates a new RenderSupport object with an empty matrix stack. */
         public function RenderSupport()
         {
-            mMatrixStack = new <Matrix3D>[];
             mProjectionMatrix = new Matrix3D();
             mModelViewMatrix = new Matrix3D();
+            mMvpMatrix = new Matrix3D();
+            mMatrixStack = new <Matrix3D>[];
+            mMatrixStackSize = 0;
+            
+            mCurrentQuadBatchID = 0;
+            mQuadBatches = new <QuadBatch>[new QuadBatch()];
             
             loadIdentity();
             setOrthographicProjection(400, 300);
+        }
+        
+        /** Disposes all quad batches. */
+        public function dispose():void
+        {
+            for each (var quadBatch:QuadBatch in mQuadBatches)
+                quadBatch.dispose();
         }
         
         // matrix manipulation
@@ -51,14 +70,18 @@ package starling.core
         public function setOrthographicProjection(width:Number, height:Number, 
                                                   near:Number=-1.0, far:Number=1.0):void
         {
-            var coords:Vector.<Number> = new <Number>[                
-                2.0/width, 0.0, 0.0, 0.0,
-                0.0, -2.0/height, 0.0, 0.0,
-                0.0, 0.0, -2.0/(far-near), 0.0,
-                -1.0, 1.0, -(far+near)/(far-near), 1.0                
-            ];
+            sMatrixCoords[0] = 2.0 / width;
+            sMatrixCoords[1] = sMatrixCoords[2] = sMatrixCoords[3] = sMatrixCoords[4] = 0.0;
+            sMatrixCoords[5] = -2.0 / height;
+            sMatrixCoords[6] = sMatrixCoords[7] = sMatrixCoords[8] = sMatrixCoords[9] = 0.0;
+            sMatrixCoords[10] = -2.0 / (far - near);
+            sMatrixCoords[11] = 0.0;
+            sMatrixCoords[12] = -1.0;
+            sMatrixCoords[13] = 1.0;
+            sMatrixCoords[14] = -(far+near) / (far-near);
+            sMatrixCoords[15] = 1.0;
             
-            mProjectionMatrix.copyRawDataFrom(coords);
+            mProjectionMatrix.copyRawDataFrom(sMatrixCoords);
         }
         
         /** Changes the modelview matrix to the identity matrix. */
@@ -95,31 +118,33 @@ package starling.core
         /** Pushes the current modelview matrix to a stack from which it can be restored later. */
         public function pushMatrix():void
         {
-            mMatrixStack.push(mModelViewMatrix.clone());
+            if (mMatrixStack.length < mMatrixStackSize + 1)
+                mMatrixStack.push(new Matrix3D());
+            
+            mMatrixStack[mMatrixStackSize++].copyFrom(mModelViewMatrix);
         }
         
         /** Restores the modelview matrix that was last pushed to the stack. */
         public function popMatrix():void
         {
-            mModelViewMatrix = mMatrixStack.pop();
+            mModelViewMatrix.copyFrom(mMatrixStack[--mMatrixStackSize]);
         }
         
-        /** Empties the matrix stack, resets the modelview matrox to the identity matrix. */
+        /** Empties the matrix stack, resets the modelview matrix to the identity matrix. */
         public function resetMatrix():void
         {
-            if (mMatrixStack.length != 0)
-                mMatrixStack = new <Matrix3D>[];
-            
+            mMatrixStackSize = 0;
             loadIdentity();
         }
         
-        /** Calculates the product of modelview and projection matrix. */
+        /** Calculates the product of modelview and projection matrix. 
+         *  CAUTION: Don't save a reference to this object! Each call returns the same instance. */
         public function get mvpMatrix():Matrix3D
         {
-            var mvpMatrix:Matrix3D = new Matrix3D();
-            mvpMatrix.append(mModelViewMatrix);
-            mvpMatrix.append(mProjectionMatrix);
-            return mvpMatrix;
+            mMvpMatrix.identity();
+            mMvpMatrix.append(mModelViewMatrix);
+            mMvpMatrix.append(mProjectionMatrix);
+            return mMvpMatrix;
         }
         
         /** Prepends translation, scale and rotation of an object to a custom matrix. */
@@ -131,10 +156,48 @@ package starling.core
             matrix.prependTranslation(-object.pivotX, -object.pivotY, 0.0);
         }
         
+        // optimized quad rendering
+        
+        /** Adds a quad to the current batch of unrendered quads. If there is a state change,
+         *  all previous quads are rendered at once, and the batch is reset. */
+        public function batchQuad(quad:Quad, alpha:Number, 
+                                  texture:Texture=null, smoothing:String=null):void
+        {
+            if (currentQuadBatch.isStateChange(quad, texture, smoothing))
+                finishQuadBatch();
+            
+            currentQuadBatch.addQuad(quad, alpha, texture, smoothing, mModelViewMatrix);
+        }
+        
+        /** Renders the current quad batch and resets it. */
+        public function finishQuadBatch():void
+        {
+            currentQuadBatch.syncBuffers();
+            currentQuadBatch.render(mProjectionMatrix);
+            currentQuadBatch.reset();
+            
+            ++mCurrentQuadBatchID;
+            
+            if (mQuadBatches.length <= mCurrentQuadBatchID)
+                mQuadBatches.push(new QuadBatch());
+        }
+        
+        /** Resets the matrix stack and the quad batch index. */
+        public function nextFrame():void
+        {
+            resetMatrix();
+            mCurrentQuadBatchID = 0;
+        }
+        
+        private function get currentQuadBatch():QuadBatch
+        {
+            return mQuadBatches[mCurrentQuadBatchID];
+        }
+        
         // other helper methods
         
         /** Sets up the default blending factors, depending on the premultiplied alpha status. */
-        public function setDefaultBlendFactors(premultipliedAlpha:Boolean):void
+        public static function setDefaultBlendFactors(premultipliedAlpha:Boolean):void
         {
             var destFactor:String = Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA;
             var sourceFactor:String = premultipliedAlpha ? Context3DBlendFactor.ONE :

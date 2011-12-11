@@ -66,6 +66,7 @@ package isohill
 			_display.texture = val;
 			if (!offset.y) offset.y = 0;
 			if (!offset.x) offset.x = 0;
+			_display.readjustSize();
 			_display.pivotY = _display.height + offset.y;
 			_display.pivotX = 0 + offset.x;
 			if (layer) layer.forceUpdate();

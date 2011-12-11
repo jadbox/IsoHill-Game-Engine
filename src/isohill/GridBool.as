@@ -19,7 +19,7 @@ package isohill
 	 */
 	public class GridBool
 	{
-		private var data:Vector.<uint>;
+		private var data:Vector.<Boolean>;
 		private var _width:int=0;
 		private var _height:int=0;
 		/**
@@ -35,7 +35,7 @@ package isohill
 			if (gridWidth == 0 || gridHeight == 0) throw new Error("Invalid starting size of 0,0");
 			_width = Math.max(gridWidth, 1); // ensure that it's not zero as an example of 0 width times 1 height would be zero
 			_height = Math.max(gridHeight, 1); // same here
-			//data = new Vector.<Boolean>(gridWidth * gridHeight, true); // make a prefined fixed sized array for performance
+			data = new Vector.<Boolean>(gridWidth * gridHeight, true); // make a prefined fixed sized array for performance
 		}
 		public function get width():int { return _width; }
 		public function get height():int { return _height; }
@@ -50,9 +50,9 @@ package isohill
 			var index:int = y * width + x; // get the index of the single array for the grid position
 			if (index >= data.length) return false;
 			
-			var alpha:uint = data[index] >> 24 & 0xFF;
-			var flag:Boolean = (alpha > 0);
-			return flag;
+			//var alpha:uint = data[index] >> 24 & 0xFF;
+			//var flag:Boolean = (alpha > 0);
+			return data[index];
 		}
 		/**
 		 * Sets the cell value at a specific location 
@@ -62,11 +62,11 @@ package isohill
 		 * @return Resulting value of the cell
 		 * 
 		 */		
-		public function setCell(x:int, y:int, value:uint):uint {
+		public function setCell(x:int, y:int, value:Boolean):Boolean {
 			var index:int = y * width + x; // get the index of the single array for the grid position
 			return data[index] = value;
 		}
-		public function setGrid(data:Vector.<uint>):void {
+		public function setGrid(data:Vector.<Boolean>):void {
 			this.data = data;
 		}
 		/**
@@ -92,29 +92,24 @@ package isohill
 		 * 
 		 */		
 		public static function fromBitMapDataAlpha(data:BitmapData, area:Rectangle = null):GridBool {
-			/*var sx:int = area?Math.floor(area.x):0;
+			//var result:GridBool = new GridBool(data.width, data.height); // correct mapping for BitmapData
+			//result.setGrid(data.getVector(data.rect));
+			var result:GridBool;
+			var sx:int = area?Math.floor(area.x):0;
 			var sy:int = area?Math.floor(area.y):0;
 			var sw:int = area?Math.ceil(area.width):data.width;
 			var sh:int = area?Math.ceil(area.height):data.height;
-			*/
-
-			var result:GridBool = new GridBool(data.width, data.height); // correct mapping for BitmapData
-			result.setGrid(data.getVector(data.rect));
-			/*
-			var hadTransparency:Boolean = false; // flag if there was any transparency in the frame
-			for (var x:int = 1; x < sw; x++) {
-				for (var y:int = 1; y < sh; y++) {
+			for (var x:int = 0; x < sw; x++) {
+				for (var y:int = 0; y < sh; y++) {
 					var val:uint = data.getPixel32(x+sx, y+sy);
 					var alpha:uint = val >> 24 & 0xFF;
-					var flag:Boolean = (alpha > 0);
-					if (flag) hadTransparency = true;
-					result.setCell(x, y, flag);
+					if (alpha !== 0) {
+						if (result === null) result = new GridBool(data.width, data.height);
+						result.setCell(x, y, true);
+					}
 				}
 			}
-			if (hadTransparency == false) { 
-				result = null; data = null;
-			}
-			*/
+			
 			return result;
 		}
 	}
