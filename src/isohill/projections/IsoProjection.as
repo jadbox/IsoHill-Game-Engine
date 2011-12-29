@@ -51,7 +51,7 @@ package isohill.projections
 			
 			if (type == TYPE_ISOMETRIC) {
 				projection.rotate(45 * (Math.PI / 180) );
-				scale = 1.4;
+				scale = 1.4142137000082988; // not sure why this magic number is needed- now working on a "real" solution
 				projection.scale(scale * 1, scale * .5);
 			}
 			else if (type == TYPE_ORTHOGONAL) {
