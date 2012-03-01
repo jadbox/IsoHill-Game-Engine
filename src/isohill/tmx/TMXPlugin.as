@@ -30,6 +30,8 @@ package isohill.tmx
 	 */
 	public class TMXPlugin implements IPlugin
 	{
+		private static const TILE_PROPERTY_HIT_MAP:String = "hitmap";
+		private static const TILE_PROPERTY_HIT_MAP_VALUE:String = "true";
 		private var tmx:TMX;
 		private var linkedLayer:Vector.<GridDisplay>;
 		private var iSprite:int=0;
@@ -71,7 +73,7 @@ package isohill.tmx
 		}
 		private function loadTiles():void {
 			for each(var tile:TMXTileset in tmx.uniqueTilesets) {
-				var loader:SpriteSheetLoader = new SpriteSheetLoader(tmx.getImgSrc(tile.firstgid), tile.areas);
+				var loader:SpriteSheetLoader = new SpriteSheetLoader(tmx.getImgSrc(tile.firstgid), tile.areas, null, tile.getPropsByID(TILE_PROPERTY_HIT_MAP)==TILE_PROPERTY_HIT_MAP_VALUE);
 				AssetManager.instance.addLoader(loader);
 			}
 		}
