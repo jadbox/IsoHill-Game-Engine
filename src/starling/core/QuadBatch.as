@@ -1,3 +1,13 @@
+// =================================================================================================
+//
+//	Starling Framework
+//	Copyright 2012 Gamua OG. All Rights Reserved.
+//
+//	This program is free software. You can redistribute and/or modify it
+//	in accordance with the terms of the accompanying license agreement.
+//
+// =================================================================================================
+
 package starling.core
 {
     import com.adobe.utils.AGALMiniAssembler;
@@ -44,13 +54,9 @@ package starling.core
         /** Creates a new QuadBatch instance with empty batch data. */
         public function QuadBatch()
         {
-            registerPrograms();
-            
             mVertexData = new VertexData(0, true);
             mIndexData = new <uint>[];
             mNumQuads = 0;
-            
-            expand();
         }
         
         /** Disposes vertex- and index-buffer. */
@@ -92,10 +98,8 @@ package starling.core
         /** Uploads the raw data of all batched quads to the vertex buffer. */
         public function syncBuffers():void
         {
-            // as 3rd parameter, we could also use 'mNumQuads * 4', but on some GPU hardware (iOS!),
-            // this is slower than updating the complete buffer.
-            
-            mVertexBuffer.uploadFromVector(mVertexData.rawData, 0, mVertexData.numVertices);
+            if (mVertexBuffer)
+                mVertexBuffer.uploadFromVector(mVertexData.rawData, 0, mNumQuads * 4);
         }
         
         /** Renders the current batch. Don't forget to call 'syncBuffers' before rendering. */
@@ -113,6 +117,7 @@ package starling.core
                 getQuadProgramName(dynamicAlpha);
             
             RenderSupport.setDefaultBlendFactors(pma);
+            registerPrograms();
             
             context.setProgram(Starling.current.getProgram(program));
             context.setVertexBufferAt(0, mVertexBuffer, VertexData.POSITION_OFFSET, Context3DVertexBufferFormat.FLOAT_3); 
@@ -174,10 +179,9 @@ package starling.core
             alpha *= quad.alpha;
             
             if (alpha != 1.0)
-                for (var i:int = 0; i<4; ++i)
-                    mVertexData.scaleAlpha(vertexID+i, alpha);
+                mVertexData.scaleAlpha(vertexID, alpha, 4);
             
-            mVertexData.transformQuad(vertexID, modelViewMatrix);
+            mVertexData.transformVertex(vertexID, modelViewMatrix, 4);
             
             ++mNumQuads;
         }

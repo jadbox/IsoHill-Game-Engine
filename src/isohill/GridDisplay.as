@@ -88,7 +88,7 @@ package isohill
 			this.projection = new IsoProjection(projectionType, cellwidth, cellheight);
 			this.projection.onSetup(this);
 			
-			trace(tileWidth, tileHeight);
+			//trace(tileWidth, tileHeight);
 		}
 		/**
 		 * Get an <code>IsoDisplay</code> element by its name 

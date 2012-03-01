@@ -85,7 +85,8 @@ package starling.display
      *  
      *  <ul>
      *    <li><code>function render(support:RenderSupport, alpha:Number):void</code></li>
-     *    <li><code>function getBounds(targetSpace:DisplayObject):Rectangle</code></li>
+     *    <li><code>function getBounds(targetSpace:DisplayObject, 
+     *                                 resultRect:Rectangle=null):Rectangle</code></li>
      *  </ul>
      *  
      *  <p>Have a look at the Quad class for a sample implementation of the 'getBounds' method.
@@ -93,10 +94,10 @@ package starling.display
      *  <a href="https://github.com/PrimaryFeather/Starling-Extension-Particle-System">particle
      *  system extension</a>.</p> 
      * 
-     *  <p>A common pitfull of custom render functions is that you have to call the 
-     *  'finishQuadBatch' method of the render support class to make Starling render the 
-     *  quads that it accumulates for performance reasons. Otherwise, the z-ordering
-     *  will be incorrect.</p> 
+     *  <p>When you override the render method, it is important that you call the method
+     *  'finishQuadBatch' of the support object. This forces Starling to render all quads that 
+     *  were accumulated before by different render methods (for performance reasons). Otherwise, 
+     *  the z-ordering will be incorrect.</p> 
      * 
      *  @see DisplayObjectContainer
      *  @see Sprite
@@ -120,6 +121,14 @@ package starling.display
         private var mName:String;
         private var mLastTouchTimestamp:Number;
         private var mParent:DisplayObjectContainer;        
+        
+        /** Helper objects. */
+        private static var sAncestors:Vector.<DisplayObject> = new <DisplayObject>[];
+        private static var sHelperRect:Rectangle = new Rectangle();
+        private static var sHelperMatrix:Matrix  = new Matrix();
+        private static var sTargetMatrix:Matrix  = new Matrix();
+        
+        protected static var sRectCount:int = 0;
         
         /** @private */ 
         public function DisplayObject()
@@ -148,53 +157,64 @@ package starling.display
         }
         
         /** Creates a matrix that represents the transformation from the local coordinate system 
-         * to another. */ 
-        public function getTransformationMatrix(targetSpace:DisplayObject):Matrix
+         *  to another. If you pass a 'resultMatrix', the result will be stored in this matrix
+         *  instead of creating a new object. */ 
+        public function getTransformationMatrix(targetSpace:DisplayObject, 
+                                                resultMatrix:Matrix=null):Matrix
         {
-            var rootMatrix:Matrix;
-            var targetMatrix:Matrix;
+            if (resultMatrix) resultMatrix.identity();
+            else resultMatrix = new Matrix();
             
             if (targetSpace == this)
             {
-                return new Matrix();
+                return resultMatrix;
+            }
+            else if (targetSpace == mParent || (targetSpace == null && mParent == null))
+            {
+                if (mPivotX != 0.0 || mPivotY != 0.0) resultMatrix.translate(-mPivotX, -mPivotY);
+                if (mScaleX != 1.0 || mScaleY != 1.0) resultMatrix.scale(mScaleX, mScaleY);
+                if (mRotation != 0.0)                 resultMatrix.rotate(mRotation);
+                if (mX != 0.0 || mY != 0.0)           resultMatrix.translate(mX, mY);
+                
+                return resultMatrix;
             }
             else if (targetSpace == null)
             {
                 // targetCoordinateSpace 'null' represents the target space of the root object.
                 // -> move up from this to root
-                rootMatrix = new Matrix();
+                
                 currentObject = this;
                 while (currentObject)
                 {
-                    rootMatrix.concat(currentObject.transformationMatrix);
+                    currentObject.getTransformationMatrix(currentObject.mParent, sHelperMatrix);
+                    resultMatrix.concat(sHelperMatrix);
                     currentObject = currentObject.parent;
                 }
-                return rootMatrix;
+                
+                return resultMatrix;
             }
             else if (targetSpace.mParent == this) // optimization
             {
-                targetMatrix = targetSpace.transformationMatrix;
-                targetMatrix.invert();
-                return targetMatrix;
-            }
-            else if (targetSpace == mParent) // optimization
-            {
-                return transformationMatrix;
+                targetSpace.getTransformationMatrix(this, resultMatrix);
+                resultMatrix.invert();
+                
+                return resultMatrix;
             }
             
             // 1. find a common parent of this and the target space
             
-            var ancestors:Vector.<DisplayObject> = new <DisplayObject>[];
+            sAncestors.length = 0;
+            
             var commonParent:DisplayObject = null;
             var currentObject:DisplayObject = this;            
             while (currentObject)
             {
-                ancestors.push(currentObject);
+                sAncestors.push(currentObject);
                 currentObject = currentObject.parent;
             }
             
             currentObject = targetSpace;
-            while (currentObject && ancestors.indexOf(currentObject) == -1)
+            while (currentObject && sAncestors.indexOf(currentObject) == -1)
                 currentObject = currentObject.parent;
             
             if (currentObject == null)
@@ -204,36 +224,38 @@ package starling.display
             
             // 2. move up from this to common parent
             
-            rootMatrix = new Matrix();
             currentObject = this;
             
             while (currentObject != commonParent)
             {
-                rootMatrix.concat(currentObject.transformationMatrix);
+                currentObject.getTransformationMatrix(currentObject.mParent, sHelperMatrix);
+                resultMatrix.concat(sHelperMatrix);
                 currentObject = currentObject.parent;
             }
             
             // 3. now move up from target until we reach the common parent
             
-            targetMatrix = new Matrix();
+            sTargetMatrix.identity();
             currentObject = targetSpace;
             while (currentObject != commonParent)
             {
-                targetMatrix.concat(currentObject.transformationMatrix);
+                currentObject.getTransformationMatrix(currentObject.mParent, sHelperMatrix);
+                sTargetMatrix.concat(sHelperMatrix);
                 currentObject = currentObject.parent;
             }
             
             // 4. now combine the two matrices
             
-            targetMatrix.invert();
-            rootMatrix.concat(targetMatrix);
+            sTargetMatrix.invert();
+            resultMatrix.concat(sTargetMatrix);
             
-            return rootMatrix;            
+            return resultMatrix;
         }        
         
         /** Returns a rectangle that completely encloses the object as it appears in another 
-         *  coordinate system. */ 
-        public function getBounds(targetSpace:DisplayObject):Rectangle
+         *  coordinate system. If you pass a 'resultRectangle', the result will be stored in this 
+         *  rectangle instead of creating a new object. */ 
+        public function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
         {
             throw new AbstractMethodError("Method needs to be implemented in subclass");
             return null;
@@ -248,7 +270,7 @@ package starling.display
             if (forTouch && (!mVisible || !mTouchable)) return null;
             
             // otherwise, check bounding box
-            if (getBounds(this).containsPoint(localPoint)) return this;             
+            if (getBounds(this, sHelperRect).containsPoint(localPoint)) return this;
             else return null;
         }
         
@@ -256,29 +278,31 @@ package starling.display
         public function localToGlobal(localPoint:Point):Point
         {
             // move up  until parent is null
-            var transformationMatrix:Matrix = new Matrix();
+            sTargetMatrix.identity();
             var currentObject:DisplayObject = this;
             while (currentObject)
             {
-                transformationMatrix.concat(currentObject.transformationMatrix);
+                currentObject.getTransformationMatrix(currentObject.mParent, sHelperMatrix);
+                sTargetMatrix.concat(sHelperMatrix);
                 currentObject = currentObject.parent;
             }            
-            return transformationMatrix.transformPoint(localPoint);
+            return sTargetMatrix.transformPoint(localPoint);
         }
         
         /** Transforms a point from global (stage) coordinates to the local coordinate system. */
         public function globalToLocal(globalPoint:Point):Point
         {
             // move up until parent is null, then invert matrix
-            var transformationMatrix:Matrix = new Matrix();
+            sTargetMatrix.identity();
             var currentObject:DisplayObject = this;
             while (currentObject)
             {
-                transformationMatrix.concat(currentObject.transformationMatrix);
+                currentObject.getTransformationMatrix(currentObject.mParent, sHelperMatrix);
+                sTargetMatrix.concat(sHelperMatrix);
                 currentObject = currentObject.parent;
             }
-            transformationMatrix.invert();
-            return transformationMatrix.transformPoint(globalPoint);
+            sTargetMatrix.invert();
+            return sTargetMatrix.transformPoint(globalPoint);
         }
         
         /** Renders the display object with the help of a support object. Never call this method
@@ -309,8 +333,17 @@ package starling.display
         
         /** @private */
         internal function setParent(value:DisplayObjectContainer):void 
-        { 
-            mParent = value; 
+        {
+            // check for a recursion
+            var ancestor:DisplayObject = value;
+            while (ancestor != this && ancestor != null)
+                ancestor = ancestor.mParent;
+            
+            if (ancestor == this)
+                throw new ArgumentError("An object cannot be added as a child to itself or one " +
+                                        "of its children (or children's children, etc.)");
+            else
+                mParent = value; 
         }
         
         /** @private */
@@ -324,14 +357,7 @@ package starling.display
         /** The transformation matrix of the object relative to its parent. */
         public function get transformationMatrix():Matrix
         {
-            var matrix:Matrix = new Matrix();
-            
-            if (mPivotX != 0.0 || mPivotY != 0.0) matrix.translate(-mPivotX, -mPivotY);
-            if (mScaleX != 1.0 || mScaleY != 1.0) matrix.scale(mScaleX, mScaleY);
-            if (mRotation != 0.0)                 matrix.rotate(mRotation);
-            if (mX != 0.0 || mY != 0.0)           matrix.translate(mX, mY);
-            
-            return matrix;
+            return getTransformationMatrix(mParent); 
         }
         
         /** The bounds of the object relative to the local coordinates of the parent. */
@@ -341,7 +367,7 @@ package starling.display
         }
         
         /** The width of the object in pixels. */
-        public function get width():Number { return getBounds(mParent).width; }        
+        public function get width():Number { return getBounds(mParent, sHelperRect).width; }
         public function set width(value:Number):void
         {
             // this method calls 'this.scaleX' instead of changing mScaleX directly.
@@ -354,7 +380,7 @@ package starling.display
         }
         
         /** The height of the object in pixels. */
-        public function get height():Number { return getBounds(mParent).height; }
+        public function get height():Number { return getBounds(mParent, sHelperRect).height; }
         public function set height(value:Number):void
         {
             mScaleY = 1.0;

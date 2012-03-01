@@ -17,6 +17,7 @@ package starling.display
     
     import starling.core.RenderSupport;
     import starling.utils.VertexData;
+    import starling.utils.transformCoords;
 
     /** A Quad represents a rectangle with a uniform color or a color gradient.
      *  
@@ -39,8 +40,10 @@ package starling.display
         /** The raw vertex data of the quad. */
         protected var mVertexData:VertexData;
         
-        /** Helper object. */
+        /** Helper objects. */
         private static var sPosition:Vector3D = new Vector3D();
+        private static var sHelperPoint:Point = new Point();
+        private static var sHelperMatrix:Matrix = new Matrix();
         
         /** Creates a quad with a certain size and color. The last parameter controls if the 
          *  alpha value should be premultiplied into the color values on rendering, which can
@@ -65,8 +68,10 @@ package starling.display
         }
         
         /** @inheritDoc */
-        public override function getBounds(targetSpace:DisplayObject):Rectangle
+        public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
         {
+            if (resultRect == null) resultRect = new Rectangle();
+            
             var minX:Number = Number.MAX_VALUE, maxX:Number = -Number.MAX_VALUE;
             var minY:Number = Number.MAX_VALUE, maxY:Number = -Number.MAX_VALUE;
             var i:int;
@@ -76,31 +81,33 @@ package starling.display
                 for (i=0; i<4; ++i)
                 {
                     mVertexData.getPosition(i, sPosition);
-                    minX = Math.min(minX, sPosition.x);
-                    maxX = Math.max(maxX, sPosition.x);
-                    minY = Math.min(minY, sPosition.y);
-                    maxY = Math.max(maxY, sPosition.y);
+                    minX = minX < sPosition.x ? minX : sPosition.x;
+                    maxX = maxX > sPosition.x ? maxX : sPosition.x;
+                    minY = minY < sPosition.y ? minY : sPosition.y;
+                    maxY = maxY > sPosition.y ? maxY : sPosition.y;
                 }
             }
             else
             {
-                var transformationMatrix:Matrix = getTransformationMatrix(targetSpace);
-                var point:Point = new Point();
+                getTransformationMatrix(targetSpace, sHelperMatrix);
                 
                 for (i=0; i<4; ++i)
                 {
                     mVertexData.getPosition(i, sPosition);
-                    point.x = sPosition.x;
-                    point.y = sPosition.y;
-                    var transformedPoint:Point = transformationMatrix.transformPoint(point);
-                    minX = Math.min(minX, transformedPoint.x);
-                    maxX = Math.max(maxX, transformedPoint.x);
-                    minY = Math.min(minY, transformedPoint.y);
-                    maxY = Math.max(maxY, transformedPoint.y);                    
+                    transformCoords(sHelperMatrix, sPosition.x, sPosition.y, sHelperPoint);
+                    minX = minX < sHelperPoint.x ? minX : sHelperPoint.x;
+                    maxX = maxX > sHelperPoint.x ? maxX : sHelperPoint.x;
+                    minY = minY < sHelperPoint.y ? minY : sHelperPoint.y;
+                    maxY = maxY > sHelperPoint.y ? maxY : sHelperPoint.y;
                 }
             }
             
-            return new Rectangle(minX, minY, maxX-minX, maxY-minY);
+            resultRect.x = minX;
+            resultRect.y = minY;
+            resultRect.width  = maxX - minX;
+            resultRect.height = maxY - minY;
+            
+            return resultRect;
         }
         
         /** Returns the color of a vertex at a certain index. */

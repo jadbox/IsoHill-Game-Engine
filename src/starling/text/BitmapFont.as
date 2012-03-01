@@ -91,6 +91,12 @@ package starling.text
             mSize = parseFloat(fontXml.info.attribute("size"));
             mLineHeight = parseFloat(fontXml.common.attribute("lineHeight"));
             
+            if (mSize <= 0)
+            {
+                trace("[Starling] Warning: invalid font size in '" + mName + "' font.");
+                mSize = (mSize == 0.0 ? 16.0 : mSize * -1.0);
+            }
+            
             for each (var charElement:XML in fontXml.chars.char)
             {
                 var id:int = parseInt(charElement.attribute("id"));
@@ -114,7 +120,7 @@ package starling.text
                 var first:int = parseInt(kerningElement.attribute("first"));
                 var second:int = parseInt(kerningElement.attribute("second"));
                 var amount:Number = parseFloat(kerningElement.attribute("amount"));
-                getChar(second).addKerning(first, amount);
+                if (second in mChars) getChar(second).addKerning(first, amount);
             }
         }
         

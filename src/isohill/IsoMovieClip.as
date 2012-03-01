@@ -78,19 +78,22 @@ package isohill
 		public function setTexture(offset:Point, textures:Vector.<Texture>, durations:Vector.<Number> = null, snds:Vector.<Sound> = null):void {
 			if (textures == null) throw new Error("Textures were null");
 			else if (_display == null) throw new Error("starling.display.MovieClip was null");
-			while (_display.numFrames > 0) _display.removeFrameAt(0);
+			
+			while (_display.numFrames > 1) _display.removeFrameAt(0); // TODO
+			
 			var num:int = textures.length;
 			for (var i:int = 0; i < num; i++) {
-				_display.addFrame(textures[i], snds?snds[i]:null, durations!=null?durations[i]:-1);
+				_display.addFrameAt(i, textures[i], snds?snds[i]:null, durations!=null?durations[i]:-1);
 			}
 			_display.currentFrame = _display.currentFrame; // Starling Texture update hack
 			if (!offset.y) offset.y = 0;
 			if (!offset.x) offset.x = 0;
 			
 			_display.readjustSize();
+			
 			_display.pivotY = _display.height + offset.y;
 			_display.pivotX = 0 + offset.x;
-			
+		
 			if (layer) layer.forceUpdate();
 			loaded = true;
 		}
