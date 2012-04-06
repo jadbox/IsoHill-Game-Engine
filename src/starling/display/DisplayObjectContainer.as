@@ -214,18 +214,11 @@ package starling.display
         /** Determines if a certain object is a child of the container (recursively). */
         public function contains(child:DisplayObject):Boolean
         {
-            if (child == this) return true;
-            
-            var numChildren:int = mChildren.length;
-            for (var i:int=0; i<numChildren; ++i)
+            while (child)
             {
-                var currentChild:DisplayObject = mChildren[i];
-                var currentChildContainer:DisplayObjectContainer = currentChild as DisplayObjectContainer;
-                
-                if (currentChildContainer && currentChildContainer.contains(child)) return true;
-                else if (currentChild == child) return true;
+                if (child == this) return true;
+                else child = child.parent;
             }
-            
             return false;
         }
         
@@ -310,9 +303,14 @@ package starling.display
                 if (child.alpha != 0.0 && child.visible && child.scaleX != 0.0 && child.scaleY != 0.0)
                 {
                     support.pushMatrix();
+                    support.pushBlendMode();
+                    
+                    support.blendMode = child.blendMode;
                     support.transformMatrix(child);
                     child.render(support, alpha);
+                    
                     support.popMatrix();
+                    support.popBlendMode();
                 }
             }
         }

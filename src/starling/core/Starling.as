@@ -319,10 +319,17 @@ package starling.core
         }
         
         /** Starts rendering and dispatching of <code>ENTER_FRAME</code> events. */
-        public function start():void { mStarted = true; }
+        public function start():void 
+        { 
+            mStarted = true; 
+            mLastFrameTimestamp = getTimer() / 1000.0; 
+        }
         
         /** Stops rendering. */
-        public function stop():void { mStarted = false; }
+        public function stop():void 
+        { 
+            mStarted = false; 
+        }
         
         // event handlers
         
@@ -343,10 +350,11 @@ package starling.core
             makeCurrent();
             
             initializeGraphicsAPI();
-            initializeRoot();
-            
-            mTouchProcessor.simulateMultitouch = mSimulateMultitouch;
             dispatchEvent(new starling.events.Event(starling.events.Event.CONTEXT3D_CREATE));
+            
+            initializeRoot();
+            mTouchProcessor.simulateMultitouch = mSimulateMultitouch;
+            mLastFrameTimestamp = getTimer() / 1000.0;
         }
         
         private function onEnterFrame(event:Event):void
@@ -509,6 +517,13 @@ package starling.core
             updateViewPort();
         }
         
+        /** The ratio between viewPort width and stage width. Useful for choosing a different
+         *  set of textures depending on the display resolution. */
+        public function get contentScaleFactor():Number
+        {
+            return mViewPort.width / mStage.stageWidth;
+        }
+        
         /** A Flash Sprite placed directly on top of the Starling content. Use it to display native
          *  Flash components. */ 
         public function get nativeOverlay():Sprite
@@ -551,6 +566,12 @@ package starling.core
         
         /** The default juggler of the currently active Starling instance. */
         public static function get juggler():Juggler { return sCurrent ? sCurrent.juggler : null; }
+        
+        /** The contentScaleFactor of the currently active Starling instance. */
+        public static function get contentScaleFactor():Number 
+        {
+            return sCurrent ? sCurrent.contentScaleFactor : 1.0;
+        }
         
         /** Indicates if multitouch input should be supported. */
         public static function get multitouchEnabled():Boolean 
