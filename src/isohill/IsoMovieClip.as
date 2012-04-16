@@ -26,7 +26,7 @@ package isohill
 	 */
 	public class IsoMovieClip extends IsoDisplay
 	{
-		private var _currentFrame:int = -1; // flag for not set
+		//private var _currentFrame:int = -1; // flag for not set
 		private var _display:HitMovieClip;
 		private var frameCallbacks:Dictionary; // key is frame int, value is [Function]
 		private var loaded:Boolean;
@@ -79,13 +79,14 @@ package isohill
 			if (textures == null) throw new Error("Textures were null");
 			else if (_display == null) throw new Error("starling.display.MovieClip was null");
 			
-			while (_display.numFrames > 1) _display.removeFrameAt(0); // TODO
-			
-			var num:int = textures.length;
-			for (var i:int = 0; i < num; i++) {
+			while (_display.numFrames > 1) _display.removeFrameAt(_display.numFrames-1); // remove all frames except for last one (cannot make container empty)
+
+			for (var i:int = 0, length:int = textures.length; i < length; i++) {
 				_display.addFrameAt(i, textures[i], snds?snds[i]:null, durations!=null?durations[i]:-1);
 			}
-			_display.currentFrame = _display.currentFrame; // Starling Texture update hack
+			_display.removeFrameAt(_display.numFrames-1); // removes the last old frame
+			_display.currentFrame = 0;// _display.currentFrame; // Starling Texture update hack
+
 			if (!offset.y) offset.y = 0;
 			if (!offset.x) offset.x = 0;
 			
@@ -103,9 +104,9 @@ package isohill
 		public function set currentFrame(val:int):void {
 			if (val < _display.numFrames) { 
 				_display.currentFrame = val; 
-				_currentFrame = -1; 
+				//_currentFrame = -1; 
 			}
-			else _currentFrame = val;
+			//else _currentFrame = val;
 		}
 		/**
 		 * Returns the current frame
@@ -180,7 +181,7 @@ package isohill
 		}
 		/** @inheritDoc */
 		public override function advanceTime(time:Number):void {
-			if(!_display.isPlaying && _currentFrame !=-1) currentFrame = _currentFrame;
+			//if(!_display.isPlaying && _currentFrame !=-1) currentFrame = _currentFrame;
 			super.advanceTime(time);
 			if (_display.isPlaying) {
 				_display.advanceTime(time);
