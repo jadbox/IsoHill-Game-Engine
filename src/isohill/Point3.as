@@ -27,6 +27,14 @@ package isohill
 			super(x, y);
 			this.z = z;
 		}
+		
+		public function copyFrom3(pt:Point3):Point3 {
+			x = pt.x; y = pt.y; z = pt.z;
+			return this;
+		}
+		public function clone3():Point3 {
+			return new Point3(x, y, z);
+		}
 		/**
 		 * Allows the point to update itself if used in an extended class 
 		 * @param time

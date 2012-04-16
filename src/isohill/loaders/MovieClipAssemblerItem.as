@@ -38,6 +38,7 @@ package isohill.loaders
 		public var mc:MovieClip;
 		public var filters:Array = new Array();
 		
+		private var _id:String; // manually set ID
 		private var children:Vector.<MovieClipAssemblerItem>;
 		private var onLoaderCallback:Function;
 		private var parseChild:int = 0;
@@ -47,6 +48,7 @@ package isohill.loaders
 			var item:MovieClipAssemblerItem = new MovieClipAssemblerItem();
 			if(o.x) item.x = Number(o.x);
 			if(o.y) item.y = Number(o.y);
+			if (o.id) item.id = o.id;
 			if(o.scaleX) item.scaleX = Number(o.scaleX);
 			if(o.scaleY) item.scaleY = Number(o.scaleY);
 			if (o.rotation) item.rotation = o.rotation;
@@ -77,6 +79,7 @@ package isohill.loaders
             matrix = matrix.concat([0, 0, 0, 1, 0]); // alpha
 			return matrix;
 		}
+		
 		/*
 		 * Adds async loading children to this item
 		 * @param item MovieClipAssemblerItem object to nest into this display object
@@ -92,10 +95,14 @@ package isohill.loaders
 		}
 		// ID is unique because of itself and children
 		public function get id():String {
-			var _id:String = "";
-			_id += file + linkage;
-			for each(var child:MovieClipAssemblerItem in children) _id += "," + child.id;
-			return _id;
+			if (_id) return _id;
+			var id:String = "";
+			id += file + linkage;
+			for each(var child:MovieClipAssemblerItem in children) id += "," + child.id;
+			return _id=id;
+		}
+		public function set id(val:String):void {
+				_id = val;
 		}
 		/*
 		 * Internal use only - used to start the loading process by MovieClipAssebler
