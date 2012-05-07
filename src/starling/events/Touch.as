@@ -13,6 +13,7 @@ package starling.events
     import flash.geom.Matrix;
     import flash.geom.Point;
     
+    import starling.core.starling_internal;
     import starling.display.DisplayObject;
     import starling.utils.formatString;
 
@@ -78,6 +79,12 @@ package starling.events
             return sHelperMatrix.transformPoint(point);
         }
         
+        /** Returns the movement of the touch between the current and previous location. */ 
+        public function getMovement(space:DisplayObject):Point
+        {
+            return getLocation(space).subtract(getPreviousLocation(space));
+        }
+        
         /** Returns a description of the object. */
         public function toString():String
         {
@@ -127,7 +134,7 @@ package starling.events
         // internal methods
         
         /** @private */
-        internal function setPosition(globalX:Number, globalY:Number):void
+        starling_internal function setPosition(globalX:Number, globalY:Number):void
         {
             mPreviousGlobalX = mGlobalX;
             mPreviousGlobalY = mGlobalY;
@@ -136,15 +143,15 @@ package starling.events
         }
         
         /** @private */
-        internal function setPhase(value:String):void { mPhase = value; }
+        starling_internal function setPhase(value:String):void { mPhase = value; }
         
         /** @private */
-        internal function setTapCount(value:int):void { mTapCount = value; }
+        starling_internal function setTapCount(value:int):void { mTapCount = value; }
         
         /** @private */
-        internal function setTarget(value:DisplayObject):void { mTarget = value; }
+        starling_internal function setTarget(value:DisplayObject):void { mTarget = value; }
         
         /** @private */
-        internal function setTimestamp(value:Number):void { mTimestamp = value; }
+        starling_internal function setTimestamp(value:Number):void { mTimestamp = value; }
     }
 }

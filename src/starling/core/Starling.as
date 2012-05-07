@@ -1,7 +1,7 @@
 // =================================================================================================
 //
 //	Starling Framework
-//	Copyright 2011 Gamua OG. All Rights Reserved.
+//	Copyright 2012 Gamua OG. All Rights Reserved.
 //
 //	This program is free software. You can redistribute and/or modify it
 //	in accordance with the terms of the accompanying license agreement.
@@ -38,7 +38,12 @@ package starling.core
     import starling.events.EventDispatcher;
     import starling.events.ResizeEvent;
     import starling.events.TouchPhase;
-    import starling.events.TouchProcessor;
+    
+    /** Dispatched when a new render context is created. */
+    [Event(name="context3DCreate", type="starling.events.Event")]
+    
+    /** Dispatched when the root class has been created. */
+    [Event(name="rootCreated", type="starling.events.Event")]
     
     /** The Starling class represents the core of the Starling framework.
      *
@@ -59,7 +64,7 @@ package starling.core
      *  The second parameter is the conventional (Flash) stage object. Per default, Starling will
      *  display its contents directly below the stage.</p>
      *  
-     *  <p>It is recommended to store the starling instance as a member variable, to make sure
+     *  <p>It is recommended to store the Starling instance as a member variable, to make sure
      *  that the Garbage Collector does not destroy it. After creating the Starling object, you 
      *  have to start it up like this:</p>
      * 
@@ -111,11 +116,12 @@ package starling.core
      *  <p>In case you want to react to a context loss, Starling dispatches an event with
      *  the type "Event.CONTEXT3D_CREATE" when the context is restored. You can recreate any 
      *  invalid resources in a corresponding event listener.</p>
+	 * 
      */ 
     public class Starling extends EventDispatcher
     {
         /** The version of the Starling framework. */
-        public static const VERSION:String = "1.0";
+        public static const VERSION:String = "1.1";
         
         // members
         
@@ -132,6 +138,7 @@ package starling.core
         private var mLastFrameTimestamp:Number;
         private var mViewPort:Rectangle;
         private var mLeftMouseDown:Boolean;
+        private var mStatsDisplay:StatsDisplay;
         
         private var mNativeStage:flash.display.Stage;
         private var mNativeOverlay:flash.display.Sprite;
@@ -171,6 +178,7 @@ package starling.core
             mStage3D = stage3D;
             mStage = new Stage(viewPort.width, viewPort.height, stage.color);
             mNativeStage = stage;
+            mNativeOverlay = new Sprite();
             mTouchProcessor = new TouchProcessor(mStage);
             mJuggler = new Juggler();
             mAntiAliasing = 0;
@@ -240,7 +248,7 @@ package starling.core
             
             var rootObject:DisplayObject = new mRootClass();
             if (rootObject == null) throw new Error("Invalid root class: " + mRootClass);
-            mStage.addChild(rootObject);
+            mStage.addChildAt(rootObject, 0);
         }
         
         private function updateViewPort():void
@@ -356,6 +364,8 @@ package starling.core
             dispatchEvent(new starling.events.Event(starling.events.Event.CONTEXT3D_CREATE));
             
             initializeRoot();
+            dispatchEvent(new starling.events.Event(starling.events.Event.ROOT_CREATED));
+            
             mTouchProcessor.simulateMultitouch = mSimulateMultitouch;
             mLastFrameTimestamp = getTimer() / 1000.0;
         }
@@ -363,19 +373,20 @@ package starling.core
         private function onEnterFrame(event:Event):void
         {
             makeCurrent();
+            updateNativeOverlay();
             
-            if (mNativeOverlay) updateNativeOverlay();
-            if (mStarted) 
-            {
-                advanceTime();
-                render();
-            }
+            // When there's a native overlay, we have to call 'render' even if Starling is 
+            // paused -- because the native stage is only updated on calls to 'context.present()'.
+            
+            if (mStarted) advanceTime();
+            if (mStarted || mNativeOverlay.parent) render();
         }
         
         private function onKey(event:KeyboardEvent):void
         {
-            makeCurrent();
+            if (!mStarted) return;
             
+            makeCurrent();
             mStage.dispatchEvent(new starling.events.KeyboardEvent(
                 event.type, event.charCode, event.keyCode, event.keyLocation, 
                 event.ctrlKey, event.altKey, event.shiftKey));
@@ -389,6 +400,8 @@ package starling.core
 
         private function onTouch(event:Event):void
         {
+            if (!mStarted) return;
+            
             var globalX:Number;
             var globalY:Number;
             var touchID:int;
@@ -533,16 +546,38 @@ package starling.core
         
         /** A Flash Sprite placed directly on top of the Starling content. Use it to display native
          *  Flash components. */ 
-        public function get nativeOverlay():Sprite
+        public function get nativeOverlay():Sprite { return mNativeOverlay; }
+        
+        /** Indicates if a small statistics box (with FPS and memory usage) is displayed. */
+        public function get showStats():Boolean { return mStatsDisplay != null; }
+        public function set showStats(value:Boolean):void
         {
-            if (mNativeOverlay == null)
+            if (mContext == null)
             {
-                mNativeOverlay = new Sprite();
-                mNativeStage.addChild(mNativeOverlay);
-                updateNativeOverlay();
+                // Starling is not yet ready - we postpone this until it's initialized.
+                addEventListener(starling.events.Event.ROOT_CREATED, onRootCreated);
+            }
+            else
+            {
+                if (value && mStatsDisplay == null)
+                {
+                    mStatsDisplay = new StatsDisplay();
+                    mStatsDisplay.touchable = false;
+                    mStatsDisplay.scaleX = mStatsDisplay.scaleY = 1.0 / contentScaleFactor;
+                    mStage.addChild(mStatsDisplay);
+                }
+                else if (!value && mStatsDisplay)
+                {
+                    mStatsDisplay.removeFromParent(true);
+                    mStatsDisplay = null;
+                }
             }
             
-            return mNativeOverlay;
+            function onRootCreated(event:Object):void
+            {
+                showStats = value;
+                removeEventListener(starling.events.Event.ROOT_CREATED, onRootCreated);
+            }
         }
         
         /** The Starling stage object, which is the root of the display tree that is rendered. */
@@ -587,9 +622,12 @@ package starling.core
         }
         
         public static function set multitouchEnabled(value:Boolean):void
-        {            
-            Multitouch.inputMode = value ? MultitouchInputMode.TOUCH_POINT :
-                                           MultitouchInputMode.NONE;
+        {
+            if (sCurrent) throw new IllegalOperationError(
+                "'multitouchEnabled' must be set before Starling instance is created");
+            else 
+                Multitouch.inputMode = value ? MultitouchInputMode.TOUCH_POINT :
+                                               MultitouchInputMode.NONE;
         }
         
         /** Indicates if Starling should automatically recover from a lost device context.
@@ -599,8 +637,8 @@ package starling.core
         public static function get handleLostContext():Boolean { return sHandleLostContext; }
         public static function set handleLostContext(value:Boolean):void 
         {
-            if (sCurrent != null) throw new IllegalOperationError(
-                "Setting must be changed before Starling instance is created");
+            if (sCurrent) throw new IllegalOperationError(
+                "'handleLostContext' must be set before Starling instance is created");
             else
                 sHandleLostContext = value;
         }

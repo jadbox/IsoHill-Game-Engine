@@ -47,6 +47,9 @@ package starling.textures
      *  });
      *  </pre>
      *  
+     *  <p>To erase parts of a render texture, you can use any display object like a "rubber" by
+     *  setting its blending mode to "BlendMode.ERASE".</p>
+     * 
      *  <p>Beware that render textures can't be restored when the Starling's render context is lost.
      *  </p>
      *     
@@ -72,14 +75,15 @@ package starling.textures
             if (scale <= 0) scale = Starling.contentScaleFactor; 
             
             mSupport = new RenderSupport();
-            mNativeWidth  = getNextPowerOfTwo(width);
-            mNativeHeight = getNextPowerOfTwo(height);
+            mNativeWidth  = getNextPowerOfTwo(width  * scale);
+            mNativeHeight = getNextPowerOfTwo(height * scale);
             mActiveTexture = Texture.empty(width, height, 0x0, true, scale);
             
             if (persistent)
             {
                 mBufferTexture = Texture.empty(width, height, 0x0, true, scale);
                 mHelperImage = new Image(mBufferTexture);
+                mHelperImage.smoothing = TextureSmoothing.NONE; // solves some antialias-issues
             }
         }
         
@@ -149,7 +153,7 @@ package starling.textures
             context.setRenderToTexture(mActiveTexture.base, false, antiAliasing);
             RenderSupport.clear();
             
-            mSupport.setOrthographicProjection(mNativeWidth, mNativeHeight);
+            mSupport.setOrthographicProjection(mNativeWidth/scale, mNativeHeight/scale);
             mSupport.applyBlendMode(true);
             
             // draw buffer

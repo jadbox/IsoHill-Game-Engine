@@ -13,9 +13,10 @@ package starling.text
     import flash.geom.Rectangle;
     import flash.utils.Dictionary;
     
-    import starling.core.QuadBatch;
     import starling.display.Image;
+    import starling.display.QuadBatch;
     import starling.textures.Texture;
+    import starling.textures.TextureSmoothing;
     import starling.utils.HAlign;
     import starling.utils.VAlign;
 
@@ -51,9 +52,19 @@ package starling.text
      */ 
     public class BitmapFont
     {
+        // embed minimal font
+        [Embed(source="../../assets/mini.fnt", mimeType="application/octet-stream")]
+        private static var MiniXml:Class;
+        
+        [Embed(source = "../../assets/mini.png")]
+        private static var MiniTexture:Class;
+        
         /** Use this constant for the <code>fontSize</code> property of the TextField class to 
          *  render the bitmap font in exactly the size it was created. */ 
         public static const NATIVE_SIZE:int = -1;
+        
+        /** The font name of the embedded minimal bitmap font. Use this e.g. for debug output. */
+        public static const MINI:String = "mini";
         
         private static const CHAR_SPACE:int   = 32;
         private static const CHAR_TAB:int     =  9;
@@ -64,22 +75,27 @@ package starling.text
         private var mName:String;
         private var mSize:Number;
         private var mLineHeight:Number;
+        private var mBaseline:Number;
+        private var mHelperImage:Image;
         
-        /** Helper object. */
-        private static var sHelperImage:Image;
-        
-        /** Creates a bitmap font by parsing an XML file and uses the specified texture. */
-        public function BitmapFont(texture:Texture, fontXml:XML=null)
+        /** Creates a bitmap font by parsing an XML file and uses the specified texture. 
+         *  If you don't pass any data, the "mini" font will be created. */
+        public function BitmapFont(texture:Texture=null, fontXml:XML=null)
         {
+            // if no texture is passed in, we create the minimal, embedded font
+            if (texture == null && fontXml == null)
+            {
+                texture = Texture.fromBitmap(new MiniTexture());
+                fontXml = XML(new MiniXml());
+            }
+            
             mName = "unknown";
-            mLineHeight = mSize = 14;
+            mLineHeight = mSize = mBaseline = 14;
             mTexture = texture;
             mChars = new Dictionary();
+            mHelperImage = new Image(texture);
             
             if (fontXml) parseFontXml(fontXml);
-            
-            // the actual texture does not matter, we just need to have an image at hand.
-            if (sHelperImage == null) sHelperImage = new Image(texture);
         }
         
         /** Disposes the texture of the bitmap font! */
@@ -97,6 +113,10 @@ package starling.text
             mName = fontXml.info.attribute("face");
             mSize = parseFloat(fontXml.info.attribute("size")) / scale;
             mLineHeight = parseFloat(fontXml.common.attribute("lineHeight")) / scale;
+            mBaseline = parseFloat(fontXml.common.attribute("base")) / scale;
+            
+            if (fontXml.info.attribute("smooth").toString() == "0")
+                smoothing = TextureSmoothing.NONE;
             
             if (mSize <= 0)
             {
@@ -154,17 +174,20 @@ package starling.text
                                                                    hAlign, vAlign, autoScale, kerning);
             var numChars:int = charLocations.length;
             
+            if (numChars > 8192)
+                throw new ArgumentError("Bitmap Font text is limited to 8192 characters.");
+            
             for (var i:int=0; i<numChars; ++i)
             {
                 var charLocation:CharLocation = charLocations[i];
                 var char:BitmapChar = charLocation.char;
-                sHelperImage.texture = char.texture;
-                sHelperImage.readjustSize();
-                sHelperImage.x = charLocation.x;
-                sHelperImage.y = charLocation.y;
-                sHelperImage.scaleX = sHelperImage.scaleY = charLocation.scale;
-                sHelperImage.color = color;
-                quadBatch.addImage(sHelperImage);
+                mHelperImage.texture = char.texture;
+                mHelperImage.readjustSize();
+                mHelperImage.x = charLocation.x;
+                mHelperImage.y = charLocation.y;
+                mHelperImage.scaleX = mHelperImage.scaleY = charLocation.scale;
+                mHelperImage.color = color;
+                quadBatch.addImage(mHelperImage);
             }
         }
         
@@ -174,7 +197,8 @@ package starling.text
                                       hAlign:String="center", vAlign:String="center",
                                       autoScale:Boolean=true, kerning:Boolean=true):Vector.<CharLocation>
         {
-            if (fontSize == NATIVE_SIZE) fontSize = mSize;
+            if (text == null || text.length == 0) return new <CharLocation>[];
+            if (fontSize < 0) fontSize *= -mSize;
             
             var lines:Vector.<Vector.<CharLocation>>;
             var finished:Boolean = false;
@@ -301,6 +325,10 @@ package starling.text
             for (var lineID:int=0; lineID<numLines; ++lineID)
             {
                 var line:Vector.<CharLocation> = lines[lineID];
+                numChars = line.length;
+                
+                if (numChars == 0) continue;
+                
                 var lastLocation:CharLocation = line[line.length-1];
                 var right:Number = lastLocation.x + lastLocation.char.width;
                 var xOffset:int = 0;
@@ -308,11 +336,10 @@ package starling.text
                 if (hAlign == HAlign.RIGHT)       xOffset =  containerWidth - right;
                 else if (hAlign == HAlign.CENTER) xOffset = (containerWidth - right) / 2;
                 
-                numChars = line.length;
                 for (var c:int=0; c<numChars; ++c)
                 {
                     charLocation = line[c];
-                    charLocation.x = scale * (charLocation.x + xOffset)
+                    charLocation.x = scale * (charLocation.x + xOffset);
                     charLocation.y = scale * (charLocation.y + yOffset);
                     charLocation.scale = scale;
                     
@@ -333,17 +360,26 @@ package starling.text
         /** The height of one line in pixels. */
         public function get lineHeight():Number { return mLineHeight; }
         public function set lineHeight(value:Number):void { mLineHeight = value; }
+        
+        /** The smoothing filter that is used for the texture. */ 
+        public function get smoothing():String { return mHelperImage.smoothing; }
+        public function set smoothing(value:String):void { mHelperImage.smoothing = value; } 
+        
+        /** The baseline of the font. */
+        public function get baseline():Number { return mBaseline; }
     }
 }
 
+import starling.text.BitmapChar;
+
 class CharLocation
 {
-    public var char:starling.text.BitmapChar;
+    public var char:BitmapChar;
     public var scale:Number;
     public var x:Number;
     public var y:Number;
     
-    public function CharLocation(char:starling.text.BitmapChar)
+    public function CharLocation(char:BitmapChar)
     {
         this.char = char;
     }

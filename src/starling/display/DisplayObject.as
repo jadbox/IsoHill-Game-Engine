@@ -84,7 +84,7 @@ package starling.display
      *  subclass DisplayObject:</p>
      *  
      *  <ul>
-     *    <li><code>function render(support:RenderSupport, alpha:Number):void</code></li>
+     *    <li><code>function render(support:RenderSupport, parentAlpha:Number):void</code></li>
      *    <li><code>function getBounds(targetSpace:DisplayObject, 
      *                                 resultRect:Rectangle=null):Rectangle</code></li>
      *  </ul>
@@ -202,8 +202,6 @@ package starling.display
             
             // 1. find a common parent of this and the target space
             
-            sAncestors.length = 0;
-            
             var commonParent:DisplayObject = null;
             var currentObject:DisplayObject = this;            
             while (currentObject)
@@ -216,10 +214,10 @@ package starling.display
             while (currentObject && sAncestors.indexOf(currentObject) == -1)
                 currentObject = currentObject.mParent;
             
-            if (currentObject == null)
-                throw new ArgumentError("Object not connected to target");
-            else
-                commonParent = currentObject;
+            sAncestors.length = 0;
+            
+            if (currentObject) commonParent = currentObject;
+            else throw new ArgumentError("Object not connected to target");
             
             // 2. move up from this to common parent
             
@@ -307,8 +305,8 @@ package starling.display
         /** Renders the display object with the help of a support object. Never call this method
          *  directly, except from within another render method.
          *  @param support Provides utility functions for rendering.
-         *  @param alpha The accumulated alpha value from the object's parent up to the stage. */
-        public function render(support:RenderSupport, alpha:Number):void
+         *  @param parentAlpha The accumulated alpha value from the object's parent up to the stage. */
+        public function render(support:RenderSupport, parentAlpha:Number):void
         {
             throw new AbstractMethodError("Method needs to be implemented in subclass");
         }

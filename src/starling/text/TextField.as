@@ -18,13 +18,13 @@ package starling.text
     import flash.text.TextFormat;
     import flash.utils.Dictionary;
     
-    import starling.core.QuadBatch;
     import starling.core.RenderSupport;
     import starling.core.Starling;
     import starling.display.DisplayObject;
     import starling.display.DisplayObjectContainer;
     import starling.display.Image;
     import starling.display.Quad;
+    import starling.display.QuadBatch;
     import starling.display.Sprite;
     import starling.events.Event;
     import starling.textures.Texture;
@@ -126,10 +126,10 @@ package starling.text
         }
         
         /** @inheritDoc */
-        public override function render(support:RenderSupport, alpha:Number):void
+        public override function render(support:RenderSupport, parentAlpha:Number):void
         {
             if (mRequiresRedraw) redrawContents();
-            super.render(support, alpha);
+            super.render(support, parentAlpha);
         }
         
         private function redrawContents():void
@@ -153,7 +153,7 @@ package starling.text
             var height:Number = mHitArea.height * scale;
             
             var textFormat:TextFormat = new TextFormat(mFontName, 
-                mFontSize * scale, 0xffffff, mBold, mItalic, mUnderline, null, null, mHAlign);
+                mFontSize * scale, mColor, mBold, mItalic, mUnderline, null, null, mHAlign);
             textFormat.kerning = mKerning;
             
             sNativeTextField.defaultTextFormat = textFormat;
@@ -191,10 +191,8 @@ package starling.text
             
             // update textBounds rectangle
             if (mTextBounds == null) mTextBounds = new Rectangle();
-            mTextBounds.x = xOffset / scale;
-            mTextBounds.y = yOffset / scale;
-            mTextBounds.width = textWidth / scale;
-            mTextBounds.height = textHeight / scale;
+            mTextBounds.setTo(xOffset   / scale, yOffset    / scale,
+                              textWidth / scale, textHeight / scale);
             
             var texture:Texture = Texture.fromBitmapData(bitmapData, true, false, scale);
             
@@ -206,11 +204,10 @@ package starling.text
             }
             else 
             { 
+                mImage.texture.dispose();
                 mImage.texture = texture; 
                 mImage.readjustSize(); 
             }
-            
-            mImage.color = mColor;
         }
         
         private function autoScaleNativeTextField(textField:flash.text.TextField):void
@@ -272,7 +269,7 @@ package starling.text
             bottomLine.width = width; bottomLine.height = 1;
             leftLine.width   = 1;     leftLine.height   = height;
             rightLine.width  = 1;     rightLine.height  = height;
-            rightLine.x  = width - 1;
+            rightLine.x  = width  - 1;
             bottomLine.y = height - 1;
             topLine.color = rightLine.color = bottomLine.color = leftLine.color = mColor;
         }
@@ -281,7 +278,7 @@ package starling.text
         public function get textBounds():Rectangle
         {
             if (mRequiresRedraw) redrawContents();
-            if (mTextBounds == null) mTextBounds = mQuadBatch.bounds;
+            if (mTextBounds == null) mTextBounds = mQuadBatch.getBounds(mQuadBatch);
             return mTextBounds.clone();
         }
         
@@ -315,6 +312,7 @@ package starling.text
         public function get text():String { return mText; }
         public function set text(value:String):void
         {
+            if (value == null) value = "";
             if (mText != value)
             {
                 mText = value;
@@ -328,6 +326,9 @@ package starling.text
         {
             if (mFontName != value)
             {
+                if (value == BitmapFont.MINI && sBitmapFonts[value] == undefined)
+                    registerBitmapFont(new BitmapFont());
+                
                 mFontName = value;
                 mRequiresRedraw = true;
                 mIsRenderedText = sBitmapFonts[value] == undefined;
@@ -355,9 +356,7 @@ package starling.text
             {
                 mColor = value;
                 updateBorder();
-                
-                if (mImage) mImage.color = value;
-                else        mRequiresRedraw = true;
+                mRequiresRedraw = true;
             }
         }
         
