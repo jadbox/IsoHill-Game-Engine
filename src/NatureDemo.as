@@ -42,7 +42,7 @@ package
 		private function onStageAdded(e:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, onStageAdded);
 			
-			TMX.loadTMX("./Nature/", "nature.tmx", onTMXLoad); // Load the TMX map for use in the engine
+			TMX.loadTMX("./Nature/", "nature_big.tmx", onTMXLoad); // Load the TMX map for use in the engine
 		}
 		private function onTMXLoad(tmx:TMX):void {
 			this.tmx = tmx;

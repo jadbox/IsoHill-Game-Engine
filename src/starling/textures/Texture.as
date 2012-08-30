@@ -19,6 +19,7 @@ package starling.textures
     import flash.geom.Matrix;
     import flash.geom.Point;
     import flash.geom.Rectangle;
+    import flash.system.Capabilities;
     import flash.utils.ByteArray;
     import flash.utils.getQualifiedClassName;
     
@@ -90,8 +91,11 @@ package starling.textures
         /** @private */
         public function Texture()
         {
-            if (getQualifiedClassName(this) == "starling.textures::Texture")
+            if (Capabilities.isDebugger && 
+                getQualifiedClassName(this) == "starling.textures::Texture")
+            {
                 throw new AbstractClassError();
+            }
             
             mRepeat = false;
         }
@@ -117,10 +121,10 @@ package starling.textures
                                               optimizeForRenderTexture:Boolean=false,
                                               scale:Number=1):Texture
         {
-            var origWidth:int = data.width;
-            var origHeight:int = data.height;
-            var legalWidth:int  = getNextPowerOfTwo(data.width);
-            var legalHeight:int = getNextPowerOfTwo(data.height);
+            var origWidth:int   = data.width;
+            var origHeight:int  = data.height;
+            var legalWidth:int  = getNextPowerOfTwo(origWidth);
+            var legalHeight:int = getNextPowerOfTwo(origHeight);
             var context:Context3D = Starling.context;
             var potData:BitmapData;
             
@@ -139,8 +143,8 @@ package starling.textures
             uploadBitmapData(nativeTexture, data, generateMipMaps);
             
             var concreteTexture:ConcreteTexture = new ConcreteTexture(
-                nativeTexture, legalWidth, legalHeight, generateMipMaps, true, 
-                optimizeForRenderTexture, scale);
+                nativeTexture, Context3DTextureFormat.BGRA, legalWidth, legalHeight,
+                generateMipMaps, true, optimizeForRenderTexture, scale);
             
             if (Starling.handleLostContext)
                 concreteTexture.restoreOnLostContext(data);
@@ -162,41 +166,26 @@ package starling.textures
             var context:Context3D = Starling.context;
             if (context == null) throw new MissingContextError();
             
-            var signature:String = String.fromCharCode(data[0], data[1], data[2]);
-            if (signature != "ATF") throw new ArgumentError("Invalid ATF data");
-            
-            var format:String = data[6] == 2 ? Context3DTextureFormat.COMPRESSED :
-                                               Context3DTextureFormat.BGRA;
-            var width:int = Math.pow(2, data[7]); 
-            var height:int = Math.pow(2, data[8]);
-            var textureCount:int = data[9];
+            var atfData:AtfData = new AtfData(data);
             var nativeTexture:flash.display3D.textures.Texture = context.createTexture(
-                    width, height, format, false);
+                    atfData.width, atfData.height, atfData.format, false);
             
             uploadAtfData(nativeTexture, data);
             
-            var concreteTexture:ConcreteTexture = new ConcreteTexture(
-                nativeTexture, width, height, textureCount > 1, false, false, scale);
+            var concreteTexture:ConcreteTexture = new ConcreteTexture(nativeTexture, atfData.format, 
+                atfData.width, atfData.height, atfData.numTextures > 1, false, false, scale);
             
             if (Starling.handleLostContext) 
-                concreteTexture.restoreOnLostContext(data);
+                concreteTexture.restoreOnLostContext(atfData);
             
             return concreteTexture;
         }
         
-        /** Creates a texture that contains a region (in pixels) of another texture. The new
-         *  texture will reference the base texture; no data is duplicated. */
-        public static function fromTexture(texture:Texture, region:Rectangle=null, frame:Rectangle=null):Texture
-        {
-            var subTexture:Texture = new SubTexture(texture, region);   
-            subTexture.mFrame = frame;
-            return subTexture;
-        }
-        
         /** Creates an empty texture of a certain size and color. The color parameter
          *  expects data in ARGB format. */
-        public static function empty(width:int=64, height:int=64, color:uint=0xffffffff,
-                                     optimizeForRenderTexture:Boolean=false, scale:Number=-1):Texture
+        public static function fromColor(width:int, height:int, color:uint=0xffffffff,
+                                         optimizeForRenderTexture:Boolean=false, 
+                                         scale:Number=-1):Texture
         {
             if (scale <= 0) scale = Starling.contentScaleFactor;
             
@@ -207,6 +196,45 @@ package starling.textures
                 bitmapData.dispose();
             
             return texture;
+        }
+        
+        /** Creates an empty texture of a certain size. Useful mainly for render textures. 
+         *  Beware that the texture can only be used after you either upload some color data or
+         *  clear the texture while it is an active render target. */
+        public static function empty(width:int=64, height:int=64, premultipliedAlpha:Boolean=false,
+                                     optimizeForRenderTexture:Boolean=true,
+                                     scale:Number=-1):Texture
+        {
+            if (scale <= 0) scale = Starling.contentScaleFactor;
+            
+            var origWidth:int  = width * scale;
+            var origHeight:int = height * scale;
+            var legalWidth:int  = getNextPowerOfTwo(origWidth);
+            var legalHeight:int = getNextPowerOfTwo(origHeight);
+            var format:String = Context3DTextureFormat.BGRA;
+            var context:Context3D = Starling.context;
+            
+            if (context == null) throw new MissingContextError();
+            
+            var nativeTexture:flash.display3D.textures.Texture = context.createTexture(
+                legalWidth, legalHeight, Context3DTextureFormat.BGRA, optimizeForRenderTexture);
+            
+            var concreteTexture:ConcreteTexture = new ConcreteTexture(nativeTexture, format,
+                legalWidth, legalHeight, false, premultipliedAlpha, optimizeForRenderTexture, scale);
+            
+            if (origWidth == legalWidth && origHeight == legalHeight)
+                return concreteTexture;
+            else
+                return new SubTexture(concreteTexture, new Rectangle(0, 0, width, height), true);
+        }
+        
+        /** Creates a texture that contains a region (in pixels) of another texture. The new
+         *  texture will reference the base texture; no data is duplicated. */
+        public static function fromTexture(texture:Texture, region:Rectangle=null, frame:Rectangle=null):Texture
+        {
+            var subTexture:Texture = new SubTexture(texture, region);   
+            subTexture.mFrame = frame;
+            return subTexture;
         }
         
         /** Converts texture coordinates and vertex positions of raw vertex data into the format 
@@ -279,7 +307,7 @@ package starling.textures
         }
         
         /** Indicates if the texture should repeat like a wallpaper or stretch the outermost pixels.
-         *  Note: this makes sense only in textures with sidelengths that are powers of two and 
+         *  Note: this only works in textures with sidelengths that are powers of two and 
          *  that are not loaded from a texture atlas (i.e. no subtextures). @default false */
         public function get repeat():Boolean { return mRepeat; }
         public function set repeat(value:Boolean):void { mRepeat = value; }
@@ -295,6 +323,9 @@ package starling.textures
         
         /** The Stage3D texture object the texture is based on. */
         public function get base():TextureBase { return null; }
+        
+        /** The <code>Context3DTextureFormat</code> of the underlying texture data. */
+        public function get format():String { return Context3DTextureFormat.BGRA; }
         
         /** Indicates if the texture contains mip maps. */ 
         public function get mipMapping():Boolean { return false; }

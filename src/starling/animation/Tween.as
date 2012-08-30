@@ -60,7 +60,7 @@ package starling.animation
         private var mCurrentTime:Number;
         private var mDelay:Number;
         private var mRoundToInt:Boolean;
-       
+        
         /** Creates a tween with a target, duration (in seconds) and a transition function. */
         public function Tween(target:Object, time:Number, transition:String="linear")        
         {
@@ -68,7 +68,7 @@ package starling.animation
         }
 
         /** Resets the tween to its default values. Useful for pooling tweens. */
-        public function reset(target:Object, time:Number, transition:String="linear"):void
+        public function reset(target:Object, time:Number, transition:String="linear"):Tween
         {
             mTarget = target;
             mCurrentTime = 0;
@@ -82,6 +82,8 @@ package starling.animation
             if (mProperties)  mProperties.length  = 0; else mProperties  = new <String>[];
             if (mStartValues) mStartValues.length = 0; else mStartValues = new <Number>[];
             if (mEndValues)   mEndValues.length   = 0; else mEndValues   = new <Number>[];
+            
+            return this;
         }
         
         /** Animates the property of an object to a target value. You can call this method multiple
@@ -126,8 +128,8 @@ package starling.animation
             if (mCurrentTime < 0 || previousTime >= mTotalTime) 
                 return;
 
-            if (onStart != null && previousTime <= 0 && mCurrentTime >= 0) 
-                onStart.apply(null, mOnStartArgs);
+            if (mOnStart != null && previousTime <= 0 && mCurrentTime >= 0) 
+                mOnStart.apply(null, mOnStartArgs);
 
             var ratio:Number = Math.min(mTotalTime, mCurrentTime) / mTotalTime;
             var numAnimatedProperties:int = mStartValues.length;
@@ -147,13 +149,13 @@ package starling.animation
                 mTarget[mProperties[i]] = currentValue;
             }
 
-            if (onUpdate != null) 
-                onUpdate.apply(null, mOnUpdateArgs);
+            if (mOnUpdate != null) 
+                mOnUpdate.apply(null, mOnUpdateArgs);
             
             if (previousTime < mTotalTime && mCurrentTime >= mTotalTime)
             {
-                dispatchEvent(new Event(Event.REMOVE_FROM_JUGGLER));
-                if (onComplete != null) onComplete.apply(null, mOnCompleteArgs);
+                dispatchEventWith(Event.REMOVE_FROM_JUGGLER);
+                if (mOnComplete != null) mOnComplete.apply(null, mOnCompleteArgs);
             }
         }
         

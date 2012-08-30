@@ -74,6 +74,7 @@ package starling.text
         private var mUnderline:Boolean;
         private var mAutoScale:Boolean;
         private var mKerning:Boolean;
+        private var mNativeFilters:Array;
         private var mRequiresRedraw:Boolean;
         private var mIsRenderedText:Boolean;
         private var mTextBounds:Rectangle;
@@ -165,6 +166,7 @@ package starling.text
             sNativeTextField.wordWrap = true;            
             sNativeTextField.text = mText;
             sNativeTextField.embedFonts = true;
+            sNativeTextField.filters = mNativeFilters;
             
             // we try embedded fonts first, non-embedded fonts are just a fallback
             if (sNativeTextField.textWidth == 0.0 || sNativeTextField.textHeight == 0.0)
@@ -188,13 +190,14 @@ package starling.text
             
             var bitmapData:BitmapData = new BitmapData(width, height, true, 0x0);
             bitmapData.draw(sNativeTextField, new Matrix(1, 0, 0, 1, 0, int(yOffset)-2));
+            sNativeTextField.text = "";
             
             // update textBounds rectangle
             if (mTextBounds == null) mTextBounds = new Rectangle();
             mTextBounds.setTo(xOffset   / scale, yOffset    / scale,
                               textWidth / scale, textHeight / scale);
             
-            var texture:Texture = Texture.fromBitmapData(bitmapData, true, false, scale);
+            var texture:Texture = Texture.fromBitmapData(bitmapData, false, false, scale);
             
             if (mImage == null) 
             {
@@ -465,13 +468,27 @@ package starling.text
                 mRequiresRedraw = true;
             }
         }
-        
-        /** Makes a bitmap font available at any text field. Set the <code>fontName</code> property
-         *  of a text field to the <code>name</code> value of the bitmap font to use the bitmap
-         *  font for rendering. */ 
-        public static function registerBitmapFont(bitmapFont:BitmapFont):void
+
+        /** The native Flash BitmapFilters to apply to this TextField. 
+         *  Only available when using standard (TrueType) fonts! */
+        public function get nativeFilters():Array { return mNativeFilters; }
+        public function set nativeFilters(value:Array) : void
         {
-            sBitmapFonts[bitmapFont.name] = bitmapFont;
+            if (!mIsRenderedText)
+                throw(new Error("The TextField.nativeFilters property cannot be used on Bitmap fonts."));
+			
+            mNativeFilters = value.concat();
+            mRequiresRedraw = true;
+        }
+        
+        /** Makes a bitmap font available at any text field, identified by its <code>name</code>.
+         *  Per default, the <code>name</code> property of the bitmap font will be used, but you 
+         *  can pass a custom name, as well. @returns the name of the font. */
+        public static function registerBitmapFont(bitmapFont:BitmapFont, name:String=null):String
+        {
+            if (name == null) name = bitmapFont.name;
+            sBitmapFonts[name] = bitmapFont;
+            return name;
         }
         
         /** Unregisters the bitmap font and, optionally, disposes it. */
@@ -481,6 +498,12 @@ package starling.text
                 sBitmapFonts[name].dispose();
             
             delete sBitmapFonts[name];
+        }
+        
+        /** Returns a registered bitmap font (or null, if the font has not been registered). */
+        public static function getBitmapFont(name:String):BitmapFont
+        {
+            return sBitmapFonts[name];
         }
     }
 }

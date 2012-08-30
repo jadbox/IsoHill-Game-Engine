@@ -136,12 +136,14 @@ package isohill
 			position.offset(x, y);
 		}
 		/** @inheritDoc */
-		public override function localToGlobal(pt:Point):Point {
-			return container.localToGlobal(pt);
+		public override function globalToLocal(globalPoint:Point, resultPoint:Point=null):Point
+        {
+			return container.localToGlobal(globalPoint, resultPoint);
 		}
 		/** @inheritDoc */
-		public override function globalToLocal(pt:Point):Point {
-			return container.globalToLocal(pt);
+		public override function localToGlobal(localPoint:Point, resultPoint:Point=null):Point
+        {
+			return container.globalToLocal(localPoint, resultPoint);
 		}
 		/**
 		 * Adds a GridDisplay layer to the engine 

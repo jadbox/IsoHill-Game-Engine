@@ -55,30 +55,41 @@ package starling.display
         private var mLoop:Boolean;
         private var mPlaying:Boolean;
         
-        /** Creates a moviclip from the provided textures and with the specified default framerate.
+        /** Creates a movie clip from the provided textures and with the specified default framerate.
          *  The movie will have the size of the first frame. */  
         public function MovieClip(textures:Vector.<Texture>, fps:Number=12)
-        {            
+        {
             if (textures.length > 0)
             {
                 super(textures[0]);
-                mDefaultFrameDuration = 1.0 / fps;
-                mLoop = true;
-                mPlaying = true;
-                mTotalTime = 0.0;
-                mCurrentTime = 0.0;
-                mCurrentFrame = 0;
-                mTextures = new <Texture>[];
-                mSounds = new <Sound>[];
-                mDurations = new <Number>[];
-                mStartTimes = new <Number>[];
-                
-                for each (var texture:Texture in textures)
-                    addFrame(texture);
+                init(textures, fps);
             }
             else
             {
                 throw new ArgumentError("Empty texture array");
+            }
+        }
+        
+        private function init(textures:Vector.<Texture>, fps:Number):void
+        {
+            if (fps <= 0) throw new ArgumentError("Invalid fps: " + fps);
+            var numFrames:int = textures.length;
+            
+            mDefaultFrameDuration = 1.0 / fps;
+            mLoop = true;
+            mPlaying = true;
+            mCurrentTime = 0.0;
+            mCurrentFrame = 0;
+            mTotalTime = mDefaultFrameDuration * numFrames;
+            mTextures = textures.concat();
+            mSounds = new Vector.<Sound>(numFrames);
+            mDurations = new Vector.<Number>(numFrames);
+            mStartTimes = new Vector.<Number>(numFrames);
+            
+            for (var i:int=0; i<numFrames; ++i)
+            {
+                mDurations[i] = mDefaultFrameDuration;
+                mStartTimes[i] = i * mDefaultFrameDuration;
             }
         }
         
@@ -225,7 +236,7 @@ package starling.display
                     {
                         var restTime:Number = mCurrentTime - mTotalTime;
                         mCurrentTime = mTotalTime;
-                        dispatchEvent(new Event(Event.COMPLETE));
+                        dispatchEventWith(Event.COMPLETE);
                         
                         // user might have changed movie clip settings, so we restart the method
                         advanceTime(restTime);
@@ -294,7 +305,9 @@ package starling.display
         public function get fps():Number { return 1.0 / mDefaultFrameDuration; }
         public function set fps(value:Number):void
         {
-            var newFrameDuration:Number = value == 0.0 ? Number.MAX_VALUE : 1.0 / value;
+            if (value <= 0) throw new ArgumentError("Invalid fps: " + value);
+            
+            var newFrameDuration:Number = 1.0 / value;
             var acceleration:Number = newFrameDuration / mDefaultFrameDuration;
             mCurrentTime *= acceleration;
             mDefaultFrameDuration = newFrameDuration;

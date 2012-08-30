@@ -14,12 +14,14 @@ package starling.display
     
     import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
+    import flash.display3D.Context3DTextureFormat;
     import flash.display3D.Context3DVertexBufferFormat;
     import flash.display3D.IndexBuffer3D;
     import flash.display3D.VertexBuffer3D;
     import flash.geom.Matrix;
     import flash.geom.Matrix3D;
     import flash.geom.Rectangle;
+    import flash.utils.Dictionary;
     import flash.utils.getQualifiedClassName;
     
     import starling.core.RenderSupport;
@@ -29,6 +31,7 @@ package starling.display
     import starling.events.Event;
     import starling.textures.Texture;
     import starling.textures.TextureSmoothing;
+    import starling.utils.MatrixUtil;
     import starling.utils.VertexData;
     
     use namespace starling_internal;
@@ -77,8 +80,9 @@ package starling.display
 
         /** Helper objects. */
         private static var sHelperMatrix:Matrix = new Matrix();
-        private static var sHelperMatrix3D:Matrix3D = new Matrix3D();
         private static var sRenderAlpha:Vector.<Number> = new <Number>[1.0, 1.0, 1.0, 1.0];
+        private static var sRenderMatrix:Matrix3D = new Matrix3D();
+        private static var sProgramNameCache:Dictionary = new Dictionary();
         
         /** Creates a new QuadBatch instance with empty batch data. */
         public function QuadBatch()
@@ -89,14 +93,17 @@ package starling.display
             mTinted = false;
             mSyncRequired = false;
             
-            // handle lost context
-            Starling.current.addEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
+            // Handle lost context. We use the conventional event here (not the one from Starling)
+            // so we're able to create a weak event listener; this avoids memory leaks when people 
+            // forget to call "dispose" on the QuadBatch.
+            Starling.current.stage3D.addEventListener(Event.CONTEXT3D_CREATE, 
+                                                      onContextCreated, false, 0, true);
         }
         
         /** Disposes vertex- and index-buffer. */
         public override function dispose():void
         {
-            Starling.current.removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
+            Starling.current.stage3D.removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
             
             if (mVertexBuffer) mVertexBuffer.dispose();
             if (mIndexBuffer)  mIndexBuffer.dispose();
@@ -104,7 +111,7 @@ package starling.display
             super.dispose();
         }
         
-        private function onContextCreated(event:Event):void
+        private function onContextCreated(event:Object):void
         {
             createBuffers();
             registerPrograms();
@@ -121,14 +128,19 @@ package starling.display
             clone.mTexture = mTexture;
             clone.mSmoothing = mSmoothing;
             clone.mSyncRequired = true;
-            clone.blendMode = this.blendMode;
+            clone.blendMode = blendMode;
+            clone.alpha = alpha;
             return clone;
         }
         
-        private function expand():void
+        private function expand(newCapacity:int=-1):void
         {
-            var oldCapacity:int = mVertexData.numVertices / 4;
-            var newCapacity:int = oldCapacity == 0 ? 16 : oldCapacity * 2;
+            var oldCapacity:int = capacity;
+            
+            if (newCapacity <  0) newCapacity = oldCapacity * 2;
+            if (newCapacity == 0) newCapacity = 16;
+            if (newCapacity <= oldCapacity) return;
+            
             mVertexData.numVertices = newCapacity * 4;
             
             for (var i:int=oldCapacity; i<newCapacity; ++i)
@@ -153,7 +165,7 @@ package starling.display
 
             if (mVertexBuffer)    mVertexBuffer.dispose();
             if (mIndexBuffer)     mIndexBuffer.dispose();
-            if (mNumQuads == 0)   return;
+            if (numVertices == 0) return;
             if (context == null)  throw new MissingContextError();
             
             mVertexBuffer = context.createVertexBuffer(numVertices, VertexData.ELEMENTS_PER_VERTEX);
@@ -183,7 +195,7 @@ package starling.display
         /** Renders the current batch with custom settings for model-view-projection matrix, alpha 
          *  and blend mode. This makes it possible to render batches that are not part of the 
          *  display list. */ 
-        public function renderCustom(mvpMatrix:Matrix3D, parentAlpha:Number=1.0,
+        public function renderCustom(mvpMatrix:Matrix, parentAlpha:Number=1.0,
                                      blendMode:String=null):void
         {
             if (mNumQuads == 0) return;
@@ -193,19 +205,20 @@ package starling.display
             var context:Context3D = Starling.context;
             var tinted:Boolean = mTinted || (parentAlpha != 1.0);
             var programName:String = mTexture ? 
-                getImageProgramName(tinted, mTexture.mipMapping, mTexture.repeat, mSmoothing) : 
+                getImageProgramName(tinted, mTexture.mipMapping, mTexture.repeat, mTexture.format, mSmoothing) : 
                 QUAD_PROGRAM_NAME;
             
             sRenderAlpha[0] = sRenderAlpha[1] = sRenderAlpha[2] = pma ? parentAlpha : 1.0;
             sRenderAlpha[3] = parentAlpha;
             
+            MatrixUtil.convertTo3D(mvpMatrix, sRenderMatrix);
             RenderSupport.setBlendFactors(pma, blendMode ? blendMode : this.blendMode);
             
             context.setProgram(Starling.current.getProgram(programName));
             context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 0, sRenderAlpha, 1);
-            context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 1, mvpMatrix, true);
+            context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 1, sRenderMatrix, true);
             context.setVertexBufferAt(0, mVertexBuffer, VertexData.POSITION_OFFSET, 
-                                      Context3DVertexBufferFormat.FLOAT_3); 
+                                      Context3DVertexBufferFormat.FLOAT_2); 
             
             if (mTexture == null || tinted)
                 context.setVertexBufferAt(1, mVertexBuffer, VertexData.COLOR_OFFSET, 
@@ -242,7 +255,7 @@ package starling.display
         
         /** Adds an image to the batch. This method internally calls 'addQuad' with the correct
          *  parameters for 'texture' and 'smoothing'. */ 
-        public function addImage(image:Image, parentAlpha:Number=1.0, modelViewMatrix:Matrix3D=null,
+        public function addImage(image:Image, parentAlpha:Number=1.0, modelViewMatrix:Matrix=null,
                                  blendMode:String=null):void
         {
             addQuad(image, parentAlpha, image.texture, image.smoothing, modelViewMatrix, blendMode);
@@ -253,15 +266,11 @@ package starling.display
          *  make sure they share that state (e.g. with the 'isStageChange' method), or reset
          *  the batch. */ 
         public function addQuad(quad:Quad, parentAlpha:Number=1.0, texture:Texture=null, 
-                                smoothing:String=null, modelViewMatrix:Matrix3D=null, 
+                                smoothing:String=null, modelViewMatrix:Matrix=null, 
                                 blendMode:String=null):void
         {
             if (modelViewMatrix == null)
-            {
-                modelViewMatrix = sHelperMatrix3D;
-                modelViewMatrix.identity();
-                RenderSupport.transformMatrixForObject(modelViewMatrix, quad);
-            }
+                modelViewMatrix = quad.transformationMatrix;
             
             var tinted:Boolean = texture ? (quad.tinted || parentAlpha != 1.0) : false;
             var alpha:Number = parentAlpha * quad.alpha;
@@ -279,30 +288,61 @@ package starling.display
             }
             
             quad.copyVertexDataTo(mVertexData, vertexID);
+            mVertexData.transformVertex(vertexID, modelViewMatrix, 4);
             
             if (alpha != 1.0)
                 mVertexData.scaleAlpha(vertexID, alpha, 4);
-            
-            mVertexData.transformVertex(vertexID, modelViewMatrix, 4);
 
             mSyncRequired = true;
             mNumQuads++;
         }
         
-        /** Indicates if a quad can be added to the batch without causing a state change. 
-         *  A state change occurs if the quad uses a different base texture or has a different 
-         *  'smoothing', 'repeat' or 'blendMode' setting. */
-        public function isStateChange(quad:Quad, parentAlpha:Number, texture:Texture, 
-                                      smoothing:String, blendMode:String):Boolean
+        public function addQuadBatch(quadBatch:QuadBatch, parentAlpha:Number=1.0, 
+                                     modelViewMatrix:Matrix=null, blendMode:String=null):void
+        {
+            if (modelViewMatrix == null)
+                modelViewMatrix = quadBatch.transformationMatrix;
+            
+            var tinted:Boolean = quadBatch.mTinted || parentAlpha != 1.0;
+            var alpha:Number = parentAlpha * quadBatch.alpha;
+            var vertexID:int = mNumQuads * 4;
+            var numQuads:int = quadBatch.numQuads;
+            
+            if (mNumQuads + numQuads > capacity) expand(mNumQuads + numQuads);
+            if (mNumQuads == 0) 
+            {
+                this.blendMode = blendMode ? blendMode : quadBatch.blendMode;
+                mTexture = quadBatch.mTexture;
+                mTinted = tinted;
+                mSmoothing = quadBatch.mSmoothing;
+                mVertexData.setPremultipliedAlpha(quadBatch.mVertexData.premultipliedAlpha, false);
+            }
+            
+            quadBatch.mVertexData.copyTo(mVertexData, vertexID, 0, numQuads*4);
+            mVertexData.transformVertex(vertexID, modelViewMatrix, numQuads*4);
+            
+            if (alpha != 1.0)
+                mVertexData.scaleAlpha(vertexID, alpha, numQuads*4);
+            
+            mSyncRequired = true;
+            mNumQuads += numQuads;
+        }
+        
+        /** Indicates if specific quads can be added to the batch without causing a state change. 
+         *  A state change occurs if the quad uses a different base texture, has a different 
+         *  'tinted', 'smoothing', 'repeat' or 'blendMode' setting, or if the batch is full
+         *  (one batch can contain up to 8192 quads). */
+        public function isStateChange(tinted:Boolean, parentAlpha:Number, texture:Texture, 
+                                      smoothing:String, blendMode:String, numQuads:int=1):Boolean
         {
             if (mNumQuads == 0) return false;
-            else if (mNumQuads == 8192) return true; // maximum buffer size
+            else if (mNumQuads + numQuads > 8192) return true; // maximum buffer size
             else if (mTexture == null && texture == null) return false;
             else if (mTexture != null && texture != null)
                 return mTexture.base != texture.base ||
                        mTexture.repeat != texture.repeat ||
                        mSmoothing != smoothing ||
-                       mTinted != (quad.tinted || parentAlpha != 1.0) ||
+                       mTinted != (tinted || parentAlpha != 1.0) ||
                        this.blendMode != blendMode;
             else return true;
         }
@@ -324,6 +364,7 @@ package starling.display
         public override function render(support:RenderSupport, parentAlpha:Number):void
         {
             support.finishQuadBatch();
+            support.raiseDrawCount();
             renderCustom(support.mvpMatrix, alpha * parentAlpha, support.blendMode);
         }
         
@@ -336,13 +377,13 @@ package starling.display
         public static function compile(container:DisplayObjectContainer, 
                                        quadBatches:Vector.<QuadBatch>):void
         {
-            compileObject(container, quadBatches, -1, new Matrix3D());
+            compileObject(container, quadBatches, -1, new Matrix());
         }
         
         private static function compileObject(object:DisplayObject, 
                                               quadBatches:Vector.<QuadBatch>,
                                               quadBatchID:int,
-                                              transformationMatrix:Matrix3D,
+                                              transformationMatrix:Matrix,
                                               alpha:Number=1.0,
                                               blendMode:String=null):int
         {
@@ -350,6 +391,10 @@ package starling.display
             var quadBatch:QuadBatch;
             var isRootObject:Boolean = false;
             var objectAlpha:Number = object.alpha;
+            
+            var container:DisplayObjectContainer = object as DisplayObjectContainer;
+            var quad:Quad = object as Quad;
+            var batch:QuadBatch = object as QuadBatch;
             
             if (quadBatchID == -1)
             {
@@ -361,11 +406,10 @@ package starling.display
                 else quadBatches[0].reset();
             }
             
-            if (object is DisplayObjectContainer)
+            if (container)
             {
-                var container:DisplayObjectContainer = object as DisplayObjectContainer;
                 var numChildren:int = container.numChildren;
-                var childMatrix:Matrix3D = new Matrix3D();
+                var childMatrix:Matrix = new Matrix();
                 
                 for (i=0; i<numChildren; ++i)
                 {
@@ -383,35 +427,44 @@ package starling.display
                     }
                 }
             }
-            else if (object is Quad)
+            else if (quad || batch)
             {
-                var quad:Quad = object as Quad;
-                var image:Image = quad as Image;
-                var texture:Texture = image ? image.texture : null;
-                var smoothing:String = image ? image.smoothing : null;
+                var texture:Texture;
+                var smoothing:String;
+                var tinted:Boolean;
+                var numQuads:int;
+                
+                if (quad)
+                {
+                    var image:Image = quad as Image;
+                    texture = image ? image.texture : null;
+                    smoothing = image ? image.smoothing : null;
+                    tinted = quad.tinted;
+                    numQuads = 1;
+                }
+                else
+                {
+                    texture = batch.mTexture;
+                    smoothing = batch.mSmoothing;
+                    tinted = batch.mTinted;
+                    numQuads = batch.mNumQuads;
+                }
                 
                 quadBatch = quadBatches[quadBatchID];
                 
-                if (quadBatch.isStateChange(quad, alpha*objectAlpha, texture, smoothing, blendMode))
+                if (quadBatch.isStateChange(tinted, alpha*objectAlpha, texture, 
+                                            smoothing, blendMode, numQuads))
                 {
                     quadBatchID++;
-                    if (quadBatches.length <= quadBatchID) 
-                        quadBatches.push(new QuadBatch());
+                    if (quadBatches.length <= quadBatchID) quadBatches.push(new QuadBatch());
                     quadBatch = quadBatches[quadBatchID];
                     quadBatch.reset();
                 }
                 
-                quadBatch.addQuad(quad, alpha, texture, smoothing, transformationMatrix, blendMode);
-            }
-            else if (object is QuadBatch)
-            {
-                if (quadBatches[quadBatchID].mNumQuads > 0)
-                    quadBatchID++;
-                
-                quadBatch = (object as QuadBatch).clone();
-                quadBatch.blendMode = blendMode;
-                quadBatch.mVertexData.transformVertex(0, transformationMatrix, -1);
-                quadBatches.splice(quadBatchID, 0, quadBatch); 
+                if (quad)
+                    quadBatch.addQuad(quad, alpha, texture, smoothing, transformationMatrix, blendMode);
+                else
+                    quadBatch.addQuadBatch(batch, alpha, transformationMatrix, blendMode);
             }
             else
             {
@@ -423,10 +476,6 @@ package starling.display
                 // remove unused batches
                 for (i=quadBatches.length-1; i>quadBatchID; --i)
                     quadBatches.pop().dispose();
-                
-                // last quadbatch could be empty
-                if (quadBatches[quadBatches.length-1].mNumQuads == 0)
-                    quadBatches.pop().dispose();
             }
             
             return quadBatchID;
@@ -435,6 +484,11 @@ package starling.display
         // properties
         
         public function get numQuads():int { return mNumQuads; }
+        public function get tinted():Boolean { return mTinted; }
+        public function get texture():Texture { return mTexture; }
+        public function get smoothing():String { return mSmoothing; }
+        
+        private function get capacity():int { return mVertexData.numVertices / 4; }
         
         // program management
         
@@ -501,45 +555,74 @@ package starling.display
                     TextureSmoothing.TRILINEAR
                 ];
                 
+                var formats:Array = [
+                    Context3DTextureFormat.BGRA,
+                    Context3DTextureFormat.COMPRESSED,
+                    "compressedAlpha" // use explicit string for compatibility
+                ];
+                
                 for each (var repeat:Boolean in [true, false])
                 {
                     for each (var mipmap:Boolean in [true, false])
                     {
                         for each (var smoothing:String in smoothingTypes)
                         {
-                            var options:Array = ["2d", repeat ? "repeat" : "clamp"];
-                            
-                            if (smoothing == TextureSmoothing.NONE)
-                                options.push("nearest", mipmap ? "mipnearest" : "mipnone");
-                            else if (smoothing == TextureSmoothing.BILINEAR)
-                                options.push("linear", mipmap ? "mipnearest" : "mipnone");
-                            else
-                                options.push("linear", mipmap ? "miplinear" : "mipnone");
-                            
-                            fragmentProgramAssembler.assemble(Context3DProgramType.FRAGMENT,
-                                fragmentProgramCode.replace("???", options.join()));
-                            
-                            target.registerProgram(
-                                getImageProgramName(tinted, mipmap, repeat, smoothing),
-                                vertexProgramAssembler.agalcode, fragmentProgramAssembler.agalcode);
+                            for each (var format:String in formats)
+                            {
+                                var options:Array = ["2d", repeat ? "repeat" : "clamp"];
+                                
+                                if (format == Context3DTextureFormat.COMPRESSED)
+                                    options.push("dxt1");
+                                else if (format == "compressedAlpha")
+                                    options.push("dxt5");
+                                
+                                if (smoothing == TextureSmoothing.NONE)
+                                    options.push("nearest", mipmap ? "mipnearest" : "mipnone");
+                                else if (smoothing == TextureSmoothing.BILINEAR)
+                                    options.push("linear", mipmap ? "mipnearest" : "mipnone");
+                                else
+                                    options.push("linear", mipmap ? "miplinear" : "mipnone");
+                                
+                                fragmentProgramAssembler.assemble(Context3DProgramType.FRAGMENT,
+                                    fragmentProgramCode.replace("???", options.join()));
+                                
+                                target.registerProgram(
+                                    getImageProgramName(tinted, mipmap, repeat, format, smoothing),
+                                    vertexProgramAssembler.agalcode, fragmentProgramAssembler.agalcode);
+                            }
                         }
                     }
                 }
             }
         }
         
-        private static function getImageProgramName(tinted:Boolean,
-                                                    mipMap:Boolean=true, repeat:Boolean=false,
+        private static function getImageProgramName(tinted:Boolean, mipMap:Boolean=true, 
+                                                    repeat:Boolean=false, format:String="bgra",
                                                     smoothing:String="bilinear"):String
         {
-            // this method is designed to return most quickly when called with
-            // the default parameters (no-repeat, mipmap, bilinear)
+            var bitField:uint = 0;
             
-            var name:String = tinted ? "QB_i*" : "QB_i'";
+            if (tinted) bitField |= 1;
+            if (mipMap) bitField |= 1 << 1;
+            if (repeat) bitField |= 1 << 2;
             
-            if (!mipMap) name += "N";
-            if (repeat)  name += "R";
-            if (smoothing != TextureSmoothing.BILINEAR) name += smoothing.charAt(0);
+            if (smoothing == TextureSmoothing.NONE)
+                bitField |= 1 << 3;
+            else if (smoothing == TextureSmoothing.TRILINEAR)
+                bitField |= 1 << 4;
+            
+            if (format == Context3DTextureFormat.COMPRESSED)
+                bitField |= 1 << 5;
+            else if (format == "compressedAlpha")
+                bitField |= 1 << 6;
+            
+            var name:String = sProgramNameCache[bitField];
+            
+            if (name == null)
+            {
+                name = "QB_i." + bitField.toString(16);
+                sProgramNameCache[bitField] = name;
+            }
             
             return name;
         }

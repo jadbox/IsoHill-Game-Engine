@@ -23,7 +23,7 @@ package
 	 * See IsoHillDemo class for engine implementation
 	 * @author Jonathan Dunlap
 	 */
-	[SWF(width="800", height="600", framerate="30", backgroundColor="#111111")]
+	[SWF(width="800", height="600", frameRate="60", backgroundColor="#111111")]
 	public class Main extends Sprite 
 	{
 		public static var instance:Main;
